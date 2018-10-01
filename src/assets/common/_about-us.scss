@@ -1,0 +1,26 @@
+$img-path: "/src/assets/img";
+
+.about-us {
+  position: relative;
+  min-height: 370px;
+  color: #ffffff;
+  background: url("#{$img-path}/bg-about-us.jpg") no-repeat fixed;
+}
+
+.about-us__left {
+  color: #000;
+
+  background-color: #ffffff;
+}
+
+.about-us__right {
+  min-height: 370px;
+  padding: 0;
+}
+
+.about-us iframe {
+  width: 100%;
+  min-height: 370px;
+  border: none;
+}
+

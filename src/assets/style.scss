@@ -1,0 +1,74 @@
+$grey: #545454;
+
+@import "lib/swiper";
+@import "lib/bootstrap";
+
+@import "common/header";
+@import "common/submenu";
+@import "common/catalog-slider";
+@import "common/stars";
+@import "common/popular-products";
+@import "common/about-us";
+@import "common/footer";
+
+@import "common/socials";
+
+//about.html
+@import "common/about-desc";
+//contacts.html
+@import "common/contacts-desc";
+//delivery.html
+@import "common/delivery-desc";
+//catalog.html
+@import "common/catalog-items";
+//details.html
+@import "common/item-details";
+//basket.html
+@import "common/basket-order";
+//login.html
+@import "common/login-form";
+//admin.html
+@import "common/admin";
+
+$img-path: "img/";
+
+body {
+  font-family: "Roboto", "Arial", sans-serif;
+  background-color: #f0f0f0;
+}
+
+header,
+footer {
+  background-color: #fff;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+main {
+  background-color: #f0f0f0;
+}
+
+.btn-orange {
+  background-color: #ff9801;
+  border-color: #ff9801;
+  color: #fff;
+
+  &:hover {
+    background-color: darken(#ff9801, 10%);
+    border-color: darken(#ff9801, 15%);
+  }
+}
+
+.collapse.navbar-collapse {
+  align-items: center;
+  padding: 15px 10px;
+}
+
+.sub-nav {
+  display: flex;
+  align-items: center;
+}
+

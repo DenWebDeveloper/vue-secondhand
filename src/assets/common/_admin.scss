@@ -1,0 +1,14 @@
+.sub-list-group-item-action {
+  border-left-width: 15px;
+  border-left-color: #ccc;
+
+  &.active {
+    border-left-color: #ccc;
+    border-top-width: 0;
+    border-bottom-width: 0;
+  }
+}
+
+.toggle-button {
+  font-size: 16px !important;
+}

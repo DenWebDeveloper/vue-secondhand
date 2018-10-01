@@ -1,0 +1,29 @@
+.popular-products {
+  margin-bottom: 50px;
+}
+
+.popular-products a {
+  text-decoration: none;
+  color: #000000;
+}
+
+.fa-fire {
+  color: #dd2726;
+}
+
+.popular-products__header {
+  border-bottom: 3px solid #dd2726;
+}
+
+.popular-products__header,
+.popular-products__body {
+  background-color: #ffffff;
+}
+
+.popular-products__header span {
+  color: #dd2726;
+}
+
+.popular-products .swiper-pagination-bullet-active {
+  background-color: #dd2726;
+}
