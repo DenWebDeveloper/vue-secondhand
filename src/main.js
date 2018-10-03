@@ -3,6 +3,9 @@ import App from './App.vue'
 import router from './router/index'
 import store from './store'
 import ToggleButton from 'vue-js-toggle-button'
+import VModal from 'vue-js-modal'
+
+Vue.use(VModal)
 
 import './assets/style.scss'
 
