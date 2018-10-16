@@ -47,7 +47,7 @@
 </template>
 
 <script>
-	import api from '../api/api'
+	import index from '../api/api'
 
 	export default {
 		name: 'ModalOrder',
@@ -58,7 +58,7 @@
 		},
 		methods: {
 			beforeOpen(event) {
-				api.get(`orders/${event.params.id}`).then(res => {
+				index.get(`orders/${event.params.id}`).then(res => {
 					this.order = res.data
 				})
 			}

@@ -9,6 +9,11 @@ const routes = [
 		name: 'auth',
 		component: () => import('../views/Auth.vue'),
 	},
+	{
+		path: '/groups',
+		name: 'groups',
+		component: () => import('../views/Groups.vue'),
+	},
 ]
 
 export default routes

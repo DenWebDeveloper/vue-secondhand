@@ -1,155 +1,305 @@
 <template>
-    <main>
-        <div class="container-fluid my-3">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="list-group">
-                        <a class="list-group-item disabled list-group-item-action">
-                            Замовлення:
-                        </a>
-                        <router-link :to="{name:'users'}" class="list-group-item list-group-item-action">
-                            Користувачі
-                        </router-link>
-                        <router-link :to="{name:'groups'}" href="#" class="list-group-item list-group-item-action">
-                            Групи
-                        </router-link>
-                        <router-link :to="{name:'products'}" href="#"
-                                     class="list-group-item list-group-item-action">
-                            Товари
-                        </router-link>
-                    </div>
-                </div>
-                <div class="col-md-9 bg-white pt-2">
-                    <h2>Замовлення</h2>
-                    <hr>
-                    <div class="d-flex align-items-center">
-                        <toggle-button v-model="isActive"
-                                       :width="120"
-                                       class="toggle-button"
-                                       :labels="{checked: 'Активні', unchecked: 'Неактивні'}"/>
-                        <form class="needs-validation ml-auto" novalidate>
-                            <div class="form-group d-flex">
-                                <input v-model="searchInput" type="text" placeholder="Пошук..." class="form-control"
-                                       required>
-                                <button @click.prevent="search" type="submit" class="btn btn-outline-dark">Пошук
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Замовник</th>
-                            <th scope="col">Email</th>
-                            <th scope="col">Номер телефону</th>
-                            <th scope="col">Ціна</th>
-                            <th scope="col"></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="item in orders" :key="item.id" @click="clickOrder(item.id)">
-                            <th scope="row">{{item.orderNumber}}</th>
-                            <td>{{item.clientName}}</td>
-                            <td>{{item.clientEmail}}</td>
-                            <td>{{item.clientTelephone}}</td>
-                            <td>{{item.price}}</td>
-                            <td>@mdo</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <paginate
-                            v-model="paginateNum"
-                            :page-count="pageCounts"
-                            container-class="pagination"
-                            page-class="page-item"
-                            next-class="page-item"
-                            prev-class="page-item"
-                            page-link-class="page-link"
-                            next-link-class="page-link"
-                            prev-link-class="page-link">
-                    </paginate>
-                </div>
-            </div>
-            <modal-order></modal-order>
+    <el-container direction="vertical" class="bg-white home">
+        <h2 class="home_title">Замовлення</h2>
+        <div class="d-flex align-items-center">
+            <el-form :inline="true" size="mini">
+                <el-form-item>
+                    <el-input
+                            placeholder="Пошук..."
+                            v-model="searchInput"
+                            required>
+                        <i slot="prefix" class="el-input__icon el-icon-search"></i>
+                    </el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click.prevent="search">Пошук</el-button>
+                </el-form-item>
+                <el-form-item label="Розміри таблиці">
+                    <el-select v-model="tableSize" placeholder="Розміри таблиці">
+                        <el-option
+                                label="medium"
+                                value="medium">
+                        </el-option>
+                        <el-option
+                                label="small"
+                                value="small">
+                        </el-option>
+                        <el-option
+                                label="mini"
+                                value="mini">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-switch
+                            v-model="activeSearch"
+                            active-text="Активні"
+                            inactive-text="Неактивні">
+                    </el-switch>
+                </el-form-item>
+            </el-form>
         </div>
-    </main>
+        <el-table
+                border
+                :size="tableSize"
+                v-loading="loadingOrderTable"
+                :data="orders"
+                style="width: 100%">
+            <el-table-column align="center" label="#">
+                <template slot-scope="scope">
+                    <span>{{ scope.row.id }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="Замовник">
+                <template slot-scope="scope">
+                    <span>{{ scope.row.clientName}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="Email">
+                <template slot-scope="scope">
+                    <span>{{ scope.row.clientEmail}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="Номер телефону">
+                <template slot-scope="scope">
+                    <span>{{ scope.row.clientTelephone}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="Ціна">
+                <template slot-scope="scope">
+                    <span>{{ scope.row.price}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="">
+                <template slot-scope="scope">
+                    <el-button
+                            size="mini"
+                            @click="openOrder(scope.$index, scope.row)">Відкрити замовлення
+                    </el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-pagination
+                class="mt-10"
+                @size-change="sizeChangePagination"
+                @current-change="currentChangePagination"
+                :current-page.sync="currentPage"
+                :page-sizes="[5,10, 20, 30, 40]"
+                :page-size="sizePagination"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="countsPages">
+        </el-pagination>
+        <el-dialog
+                title="Замовлення"
+                :visible.sync="dialogVisibleOrder"
+                width="90%">
+            <el-row type="flex" align="middle">
+                <el-col :span="18">
+                    <h2>#{{activeOrderInfo.id}}</h2>
+                </el-col>
+                <el-col :span="6" style="text-align: right">
+                    <el-tag v-if="activeSearch" type="success">Активний</el-tag>
+                    <el-tag v-else type="danger">Неактивний</el-tag>
+                </el-col>
+            </el-row>
+            <el-table
+                    border
+                    :data="activeOrder"
+                    style="width: 100%">
+                <el-table-column align="center" label="#">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.id }}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column align="center" label="Назва">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.name || 'Назва товару'}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column align="center" label="Кількість">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.count}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column align="center" label="Розмір">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.size || 'Розмір товару'}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column align="Колір" label="Розмір">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.color || 'Колір товару'}}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column align="center" label="Ціна">
+                    <template slot-scope="scope">
+                        <span>{{ scope.row.pricePerItem * scope.row.count}}</span>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!--card  cashDelivery cash-->
+            <div class="mt-10">
+                Тип оплати:
+                <el-tag v-if="activeOrderInfo.paymentType === 'card'">Картка</el-tag>
+                <el-tag v-else-if="activeOrderInfo.paymentType === 'cashDelivery'" type="success">Наложний платіж
+                </el-tag>
+                <el-tag v-else-if="activeOrderInfo.paymentType === 'cash'">Готівка</el-tag>
+                <el-tag v-else>Поле пусте</el-tag>
+                <el-select v-if="activeOrderInfo.paymentType === 'card'" v-model="activeOrderInfo.isPayed" class="ml-10">
+                    <el-option
+                            label="Оплачено"
+                            :value="1">
+                    </el-option>
+                    <el-option
+                            label="Чекає оплати"
+                            :value="0">
+                    </el-option>
+                </el-select>
+            </div>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="closeDialogOrder">Закрити</el-button>
+                <el-button @click="rejectOrder" icon="el-icon-close" type="danger">Відхилити</el-button>
+                <el-button @click="resolveOrder" icon="el-icon-check" type="success">Підтвердити</el-button>
+            </div>
+        </el-dialog>
+    </el-container>
 </template>
 
 <script>
 	import Paginate from 'vuejs-paginate'
-	import ModalOrder from '../components/ModalOrder'
-	import api from '../api/api'
+	import index from '../api/'
 
 	export default {
 		name: 'Home',
 		components: {
 			Paginate,
-			ModalOrder
 		},
 		data() {
 			return {
+				loadingOrderTable: false,
 				orders: [],
-				counts: 0,
+				countsPages: 0,
 				searchInput: '',
-				paginateNum: 1,
-				numberOfItems: 5,
-				isActive: true,
+				currentPage: 1,
+				sizePagination: 5,
+				activeSearch: true,
+				activeOrder: {},
+				activeOrderInfo: {},
+				tableSize: 'small',
+				dialogVisibleOrder: false
 			}
 		},
 		computed: {
-			pageCounts() {
-				return Math.ceil(this.counts / this.numberOfItems)
-			},
 			startPositionPaginate() {// (2*4) - 4 = 6
-				return (this.paginateNum * this.numberOfItems) - this.numberOfItems
+				return (this.currentPage * this.sizePagination) - this.sizePagination
 			}
 		},
 		beforeMount() {
 			this.getOrders()
 		},
 		mounted() {
-			this.$watch(vm => [vm.isActive, vm.paginateNum], () => {
+			this.$watch(vm => [vm.activeSearch, vm.sizePagination, vm.currentPage], () => {
 				this.getOrders()
 			})
 		},
 		methods: {
 			getOrders(searchParams = {}) {
 				const params = {
-					isActive: Number(this.isActive),
+					isActive: Number(this.activeSearch),
 					...searchParams
 				}
-				api.get('/orders', {
+				this.loadingOrderTable = true
+				index.get('/orders', {
 					params: {
 						startPosition: this.startPositionPaginate,
-						numberOfItems: this.numberOfItems,
+						numberOfItems: this.sizePagination,
 						...params
 					}
 				}).then(res => {
 					this.orders = res.data
+					this.loadingOrderTable = false
+				}).catch(err => {
+					this.$notify({
+						title: 'Сталась помилка',
+						message: `Обновіть сторінку. ${err}`,
+						duration: 0
+					})
+					this.loadingOrderTable = false
 				})
-				api.get('orders/count', {params}).then(res => {
-					this.counts = res.data
+
+				this.loadingOrderTable = true
+				index.get('orders/count', {params}).then(res => {
+					this.countsPages = res.data
+				}).catch(err => {
+					this.$notify({
+						title: 'Сталась помилка',
+						message: `Обновіть сторінку. ${err}`,
+						duration: 0
+					})
+					this.loadingOrderTable = false
 				})
 			},
 			search() {
 				const filterSearchText = this.searchInput.trim().length === 0 ? {} : {filter: this.searchInput}
 				this.getOrders(filterSearchText)
 			},
-			clickOrder(orderId) {
-				this.$modal.show('modal-order', {id: orderId})
+			openOrder(index, order) {
+				const {id, paymentType, isPayed} = order
+				this.activeOrderInfo = {
+					id,
+					paymentType,
+					isPayed,
+					_index: index
+				}
+				const loading = this.$loading({
+					lock: true,
+					text: 'Loading',
+					spinner: 'el-icon-loading',
+					background: 'rgba(0, 0, 0, 0.7)'
+				})
+				index.get(`/orders/${id}/Items`).then(res => {
+					loading.close()
+					this.dialogVisibleOrder = true
+					this.activeOrder = res.data
+				}).catch(err => {
+					this.$notify({
+						title: 'Сталась помилка',
+						message: `Обновіть сторінку. ${err}`,
+						duration: 0
+					})
+					loading.close()
+				})
+			},
+			sizeChangePagination(val) {
+				this.sizePagination = val
+			},
+			currentChangePagination(val) {
+				this.currentPage = val
+			},
+			closeDialogOrder() {
+				this.activeOrder = {}
+				this.activeOrderInfo = {}
+				this.dialogVisibleOrder = false
 			}
 		}
 	}
 </script>
 
 <style scoped>
-    .table tr:hover {
-        cursor: pointer;
-        box-shadow: 0 0 7px 0 rgba(0, 0, 0, 0.45)
+    .home {
+        padding: 10px;
     }
 
-    .bg-white {
-        background-color: #fff;
+    .home_title {
+        margin: 10px 0;
     }
+
+    .mt-10 {
+        margin-top: 10px;
+    }
+    .ml-10 {
+        margin-left: 10px;
+    }
+
+
 </style>

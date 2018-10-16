@@ -1,8 +1,5 @@
 $grey: #545454;
 
-@import "lib/swiper";
-@import "lib/bootstrap";
-
 @import "common/header";
 @import "common/submenu";
 @import "common/catalog-slider";
@@ -35,6 +32,8 @@ $img-path: "img/";
 body {
   font-family: "Roboto", "Arial", sans-serif;
   background-color: #f0f0f0;
+  margin: 0;
+  padding: 0;
 }
 
 header,
@@ -49,6 +48,10 @@ img {
 
 main {
   background-color: #f0f0f0;
+}
+
+.bg-white {
+  background-color: #fff;
 }
 
 .btn-orange {
@@ -70,5 +73,17 @@ main {
 .sub-nav {
   display: flex;
   align-items: center;
+}
+
+
+.table-border {
+  border-collapse: collapse;
+  width: 100%;
+  th,td {
+    text-align: center;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+  }
 }
 

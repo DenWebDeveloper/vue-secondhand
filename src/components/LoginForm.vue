@@ -31,7 +31,7 @@
 </template>
 
 <script>
-	import api from '../api/api'
+	import index from '../api/api'
 	import Cookies from 'js-cookie'
 
 	export default {
@@ -46,7 +46,7 @@
 		},
 		methods: {
 			login() {
-				api.get('/tokens', {
+				index.get('/tokens', {
 					params: {
 						username: this.email,
 						password: this.password

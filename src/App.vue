@@ -1,8 +1,12 @@
 <template>
     <div id="app">
-        <Header></Header>
-        <router-view></router-view>
-        <Footer></Footer>
+        <el-container class="global-container">
+            <el-header>Header</el-header>
+            <div style="padding: 10px">
+                <router-view></router-view>
+            </div>
+            <el-footer>Footer</el-footer>
+        </el-container>
     </div>
 </template>
 
@@ -20,7 +24,7 @@
 </script>
 
 <style scoped>
-    #app {
+    .global-container {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
