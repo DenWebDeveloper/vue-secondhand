@@ -145,7 +145,8 @@
                 </el-tag>
                 <el-tag v-else-if="activeOrderInfo.paymentType === 'cash'">Готівка</el-tag>
                 <el-tag v-else>Поле пусте</el-tag>
-                <el-select v-if="activeOrderInfo.paymentType === 'card'" v-model="activeOrderInfo.isPayed" class="ml-10">
+                <el-select v-if="activeOrderInfo.paymentType === 'card'" v-model="activeOrderInfo.isPayed"
+                           class="ml-10">
                     <el-option
                             label="Оплачено"
                             :value="1">
@@ -167,7 +168,6 @@
 
 <script>
 	import Paginate from 'vuejs-paginate'
-	import index from '../api/'
 
 	export default {
 		name: 'Home',
@@ -209,7 +209,7 @@
 					...searchParams
 				}
 				this.loadingOrderTable = true
-				index.get('/orders', {
+				this.$api.get('/orders', {
 					params: {
 						startPosition: this.startPositionPaginate,
 						numberOfItems: this.sizePagination,
@@ -228,7 +228,7 @@
 				})
 
 				this.loadingOrderTable = true
-				index.get('orders/count', {params}).then(res => {
+				this.$api.get('orders/count', {params}).then(res => {
 					this.countsPages = res.data
 				}).catch(err => {
 					this.$notify({
@@ -257,7 +257,7 @@
 					spinner: 'el-icon-loading',
 					background: 'rgba(0, 0, 0, 0.7)'
 				})
-				index.get(`/orders/${id}/Items`).then(res => {
+				this.$api.get(`/orders/${id}/Items`).then(res => {
 					loading.close()
 					this.dialogVisibleOrder = true
 					this.activeOrder = res.data
@@ -297,6 +297,7 @@
     .mt-10 {
         margin-top: 10px;
     }
+
     .ml-10 {
         margin-left: 10px;
     }

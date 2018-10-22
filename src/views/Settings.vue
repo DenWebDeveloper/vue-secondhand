@@ -1,0 +1,84 @@
+<template>
+    <el-container style="display: flex;justify-content: center;">
+        <el-form :model="info" :rules="rules" ref="infoForm" label-width="175px" class="bg-white info-form">
+            <el-form-item label="Ім'я" prop="name">
+                <el-input v-model="info.name"></el-input>
+            </el-form-item>
+            <el-form-item label="Розташування" prop="location">
+                <el-input v-model="info.location"></el-input>
+            </el-form-item>
+            <el-form-item label="Розташування на карті" prop="mapLocation">
+                <el-input v-model="info.mapLocation"></el-input>
+            </el-form-item>
+            <el-form-item label="Телефон" prop="telephones">
+                <el-input v-model="info.telephones"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="submitInfoForm">Зберегти</el-button>
+            </el-form-item>
+        </el-form>
+    </el-container>
+</template>
+
+<script>
+	import {mapGetters} from 'vuex'
+	import * as types from '../store/actions.types'
+
+	export default {
+		name: 'Settings',
+		data() {
+			return {
+				rules: {
+					name: [
+						{required: true, message: 'Введіть ім\'я', trigger: 'change'},
+					],
+					location: [
+						{required: true, message: 'Введіть розташування', trigger: 'change'}
+					],
+					mapLocation: [
+						{required: true, message: 'Введіть розташування на карті', trigger: 'change'}
+					],
+					telephones: [
+						{required: true, message: 'Введіть номер телефону', trigger: 'change'}
+					]
+				}
+			}
+		},
+		computed: {
+			...mapGetters({
+				info: 'getBaseInfo'
+			})
+		},
+		methods: {
+			submitInfoForm() {
+				this.$refs['infoForm'].validate((valid) => {
+					if (!valid) return false
+					this.$store.dispatch(types.SET_BASE_INFO, this.info).then(() => {
+						this.$notify({
+							title: 'Все добре :)',
+							message: 'Дані збережені',
+							duration: 4000,
+							type: 'success'
+						})
+					}).catch(err => {
+						this.$notify.error({
+							title: 'Ой, не все добре :(',
+							message: 'Сталась помилка. Спробуйте оновити сторінку. ' + err.message,
+							duration: 12000,
+						})
+					})
+				})
+			}
+		}
+	}
+</script>
+
+<style scoped>
+    .info-form {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 25px 20px 1px 20px;
+    }
+</style>
