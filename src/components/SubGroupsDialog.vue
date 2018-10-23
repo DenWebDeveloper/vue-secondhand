@@ -4,6 +4,7 @@
             :visible="visible"
             :before-close="handleClose"
             @open="handleOpen"
+            append-to-body
             width="90%">
         <el-form :model="group" ref="groupForm" label-width="150px">
             <el-row type="flex" justify="space-between">
@@ -13,26 +14,6 @@
                             label="Назва групи"
                             :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
                         <el-input v-model="group.name"></el-input>
-                    </el-form-item>
-                    <el-form-item
-                            v-for="(item, index) in group.subGroups"
-                            :label="'Назва підгрупи ' + (index + 1)"
-                            :key="item.id"
-                            :prop="'subGroups.' + index + '.name'"
-                            :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
-                        <el-input v-model="item.name">
-                            <template slot="append">
-                                <el-button class="group__button-append--warning" type="primary"
-                                           @click.prevent="editSubGroup(index)">Редагувати
-                                </el-button>
-                                <el-button class="group__button-append--danger" type="danger"
-                                           @click.prevent="removeSubGroup(index)">Видалити
-                                </el-button>
-                            </template>
-                        </el-input>
-                    </el-form-item>
-                    <el-form-item>
-                        <el-button @click.prevent="addSubGroup()">Додати підгрупу</el-button>
                     </el-form-item>
                     <el-form-item
                             prop="description"
@@ -63,24 +44,15 @@
             <el-button type="danger" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
-        <sub-groups-dialog
-                v-bind:visible.sync="subDialog.visible"
-                :groupInfo.sync="subDialog.group"
-                :parentGroup.sync="group"
-                @update-group="getGroups"/>
     </el-dialog>
 </template>
 
 <script>
-	import SubGroupsDialog from './SubGroupsDialog'
-
 	export default {
-		name: 'GroupsDialog',
-		components: {
-			SubGroupsDialog
-		},
+		name: 'SubGroupsDialog',
 		props: {
 			visible: Boolean,
+			parentGroup: Object,
 			groupInfo: Object
 		},
 		data() {
@@ -92,10 +64,6 @@
 					subGroups: [],
 					description: ''
 				},
-				subDialog: {
-					visible: false,
-					group: {}
-				}
 			}
 		},
 		computed: {
@@ -105,8 +73,9 @@
 		},
 		methods: {
 			handleOpen() {
-				if (this.isCreate) {
-					this.$api.post('/groups', {name: 'Нова група', isTopLevelGroup: 1}).then(res => {
+				if (true) {/*this.isCreate*/
+					window.z = this
+					this.$api.post(`/groups/${this.parentGroup.id}/groups`, {name: 'Нова підгрупа', isTopLevelGroup: 1}).then(res => {
 						this.$set(this.group, 'id', res.data.id)
 					}).catch(err => {
 						this.$notify.error({
@@ -116,18 +85,15 @@
 						})
 					})
 				} else {
-					this.group = this.groupInfo
+					this.group = this.parentGroup
 				}
 				this.$refs['groupForm'].resetFields()
 			},
 			addSubGroup() {
-				this.subDialog = {
-					visible: true,
-					group: {}
-				}
-			},
-			editSubGroup(index) {
-				this.group.subGroups.splice(index, 1)
+				this.group.subGroups.push({
+					key: new Date().toString(),// значення ключа не відправляється на сервер. Він використовується у сложбових цілях
+					name: ''
+				})
 			},
 			removeSubGroup(index) {
 				this.group.subGroups.splice(index, 1)
@@ -150,7 +116,7 @@
 			handleClose(done) {
 				this.$emit('update:visible', false)
 				this.$emit('update-group')
-				this.$emit('update:groupInfo', {})
+				this.$emit('update:parentGroup', {})
 				if (typeof done === 'function') {
 					done()
 				}
@@ -158,7 +124,7 @@
 			deleteGroup() {
 				this.$api.delete(`/groups/${this.group.id}`).then(() => {
 					this.$emit('update:visible', false)
-					this.$emit('update:groupInfo', {})
+					this.$emit('update:parentGroup', {})
 					this.$emit('update-group')
 					this.$notify({
 						title: 'Успішно',

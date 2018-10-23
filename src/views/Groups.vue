@@ -13,7 +13,7 @@
             <el-collapse-item v-for="(group,index) in groups" :name="index" :key="group.id">
                 <template slot="title">
                     <el-row class="groups__collapse-row" type="flex" justify="space-between">
-                        <el-col>{{group.name}}</el-col>
+                        <el-col style="font-weight: bold">{{group.name}}</el-col>
                         <el-col :span="2">
                             <el-button
                                     class="groups__edit"
@@ -24,7 +24,15 @@
                 </template>
                 <div v-if="group.subGroupLoad">
                     <div v-for="subGroup in group.subGroups" :key="subGroup.id">
-                        {{subGroup.name}}
+                        <el-row class="groups__collapse-row groups__collapse-row--inner" type="flex" justify="space-between">
+                            <el-col>{{subGroup.name}}</el-col>
+                            <el-col :span="2">
+                                <el-button
+                                        class="groups__edit"
+                                        @click="editGroup(subGroup)"
+                                        type="primary" icon="el-icon-edit" circle></el-button>
+                            </el-col>
+                        </el-row>
                     </div>
                 </div>
                 <div v-else>
@@ -116,13 +124,28 @@
     }
 
     .groups__edit {
-        display: none;
+        opacity: 0;
 
     }
 
     .groups__collapse-row {
+        border: 1px solid #f0f0f0;
+        padding-left: 15px;
+        font-size: 15px;
+
+        &--inner {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        &:hover {
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.13);
+            cursor: pointer;
+        }
+
         &:hover .groups__edit {
-            display: inline-block;
+            opacity: 1;
         }
     }
 </style>
