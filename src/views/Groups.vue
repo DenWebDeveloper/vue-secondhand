@@ -12,11 +12,12 @@
         <el-collapse accordion @change="changeOpenGroup">
             <el-collapse-item v-for="(group,index) in groups" :name="index" :key="group.id">
                 <template slot="title">
-                    <el-row type="flex" justify="space-between">
+                    <el-row class="groups__collapse-row" type="flex" justify="space-between">
                         <el-col>{{group.name}}</el-col>
                         <el-col :span="2">
                             <el-button
-                                    @click="editGroup(group.id)"
+                                    class="groups__edit"
+                                    @click="editGroup(group)"
                                     type="primary" icon="el-icon-edit" circle></el-button>
                         </el-col>
                     </el-row>
@@ -33,7 +34,9 @@
         </el-collapse>
         <groups-dialog
                 v-bind:visible.sync="dialog.visible"
-                :create="dialog.create"/>
+                :groupInfo.sync="dialog.group"
+                @update-group="getGroups"
+        />
     </el-container>
 </template>
 
@@ -50,7 +53,7 @@
 				groups: [],
 				dialog: {
 					visible: false,
-					create: true
+					group: {}
 				}
 			}
 		},
@@ -94,15 +97,32 @@
 			createGroup() {
 				this.dialog = {
 					visible: true,
-					create: true
+					group: {}
 				}
-			}
+			},
+			editGroup(group) {
+				this.dialog = {
+					visible: true,
+					group
+				}
+            }
 		}
 	}
 </script>
 
-<style>
+<style scoped lang="scss">
     .groups {
         padding: 10px;
+    }
+
+    .groups__edit {
+        display: none;
+
+    }
+
+    .groups__collapse-row {
+        &:hover .groups__edit {
+            display: inline-block;
+        }
     }
 </style>

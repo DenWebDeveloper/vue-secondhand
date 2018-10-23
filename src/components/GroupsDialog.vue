@@ -1,6 +1,6 @@
 <template>
     <el-dialog
-            title="Створити групу"
+            :title="`${isCreate?'Створити':'Оновити'} групу`"
             :visible="visible"
             :before-close="handleClose"
             @open="handleOpen"
@@ -17,12 +17,14 @@
                     <el-form-item
                             v-for="(item, index) in group.subGroups"
                             :label="'Назва підгрупи ' + (index + 1)"
-                            :key="item.key"
-                            :prop="'subGroups.' + index + '.value'"
+                            :key="item.id"
+                            :prop="'subGroups.' + index + '.name'"
                             :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'change'}">
-                        <el-input v-model="item.value">
+                        <el-input v-model="item.name">
                             <template slot="append">
-                                <el-button @click.prevent="removeSubGroup(index)">Видалити</el-button>
+                                <el-button class="group__button-append" type="danger"
+                                           @click.prevent="removeSubGroup(index)">Видалити
+                                </el-button>
                             </template>
                         </el-input>
                     </el-form-item>
@@ -54,8 +56,9 @@
             </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
-            <el-button @click="submitForm">Зберегти</el-button>
-            <el-button @click="handleClose">Приховати</el-button>
+            <el-button @click="handleClose">Приховати вікно</el-button>
+            <el-button type="danger" @click="deleteGroup">Видалити</el-button>
+            <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
     </el-dialog>
 </template>
@@ -65,7 +68,7 @@
 		name: 'GroupsModal',
 		props: {
 			visible: Boolean,
-			create: Boolean
+			groupInfo: Object
 		},
 		data() {
 			return {
@@ -73,33 +76,36 @@
 				group: {
 					id: '',
 					name: '',
-					subGroups: [
-						{
-							key: new Date().toString(),
-							value: ''
-						}
-					],
+					subGroups: [],
 					description: ''
 				},
 			}
 		},
+		computed: {
+			isCreate() {
+				return this.groupInfo.id === 'undefined'
+			}
+		},
 		methods: {
 			handleOpen() {
-				if (this.group.id.length !== 0) return
-				this.$api.post('/groups', {name: 'Нова група', isTopLevelGroup: 1}).then(res => {
-					this.$set(this.group, 'id', res.data.id)
-				}).catch( err =>{
-					this.$notify.error({
-						title: 'Сталась помилка',
-						message: `Обновіть сторінку. ${err}`,
-						duration: 0
+				if (this.isCreate) {
+					this.$api.post('/groups', {name: 'Нова група', isTopLevelGroup: 1}).then(res => {
+						this.$set(this.group, 'id', res.data.id)
+					}).catch(err => {
+						this.$notify.error({
+							title: 'Сталась помилка',
+							message: `Обновіть сторінку. ${err}`,
+							duration: 0
+						})
 					})
-                })
+				} else {
+					this.group = this.groupInfo
+				}
 			},
 			addSubGroup() {
 				this.group.subGroups.push({
-					key: new Date().toString(),
-					value: ''
+					key: new Date().toString(),// значення ключа не відправляється на сервер. Він використовується у сложбових цілях
+					name: ''
 				})
 			},
 			removeSubGroup(index) {
@@ -111,7 +117,10 @@
 					const {name, description} = this.group
 					this.$api.put(`/groups/${this.group.id}`, {
 						name, description
-					})
+					}).then(()=>{
+						this.$emit('update:visible', false)
+						this.$emit('update-group')
+                    })
 				})
 			},
 			uploadSuccess() {
@@ -119,15 +128,36 @@
 			},
 			handleClose(done) {
 				this.$emit('update:visible', false)
+				this.$emit('update-group')
+				this.$emit('update:groupInfo', {})
 				if (typeof done === 'function') {
 					done()
 				}
+			},
+			deleteGroup() {
+				this.$api.delete(`/groups/${this.group.id}`).then(() => {
+					this.$emit('update:visible', false)
+					this.$emit('update:groupInfo', {})
+					this.$emit('update-group')
+					this.$notify({
+						title: 'Успішно',
+						message: 'Група була видалена',
+						duration: 3000,
+						type: 'success'
+					})
+				}).catch(err => {
+					this.$notify.error({
+						title: 'Сталась помилка',
+						message: `Можливо група не була видалена. ${err}`,
+						duration: 0
+					})
+				})
 			}
 		}
 	}
 </script>
 
-<style>
+<style lang="scss">
     .button-edit:hover {
         font-weight: bold;
     }
@@ -157,5 +187,17 @@
         width: 178px;
         height: 178px;
         display: block;
+    }
+
+    .el-input-group__append {
+        border: none;
+
+        .group__button-append.el-button {
+            color: #fff;
+            background-color: #f56c6c;
+            border: 1px solid #f56c6c;
+            border-radius: 0 4px 4px 0;
+        }
+
     }
 </style>
