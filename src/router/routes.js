@@ -31,7 +31,7 @@ const routes = [
 		path: '/auth',
 		name: 'auth',
 		component: () => import('../views/Auth.vue'),
-	},
+	}
 ]
 
 export default routes

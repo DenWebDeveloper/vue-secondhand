@@ -12,18 +12,27 @@
         <el-collapse accordion @change="changeOpenGroup">
             <el-collapse-item v-for="(group,index) in groups" :name="index" :key="group.id">
                 <template slot="title">
-                    <el-row type="flex" justify="space-between">
-                        <el-col>{{group.name}}</el-col>
+                    <el-row class="groups__collapse-row" type="flex" justify="space-between">
+                        <el-col style="font-weight: bold">{{group.name}}</el-col>
                         <el-col :span="2">
                             <el-button
-                                    @click="editGroup(group.id)"
+                                    class="groups__edit"
+                                    @click="editGroup(group)"
                                     type="primary" icon="el-icon-edit" circle></el-button>
                         </el-col>
                     </el-row>
                 </template>
                 <div v-if="group.subGroupLoad">
                     <div v-for="subGroup in group.subGroups" :key="subGroup.id">
-                        {{subGroup.name}}
+                        <el-row class="groups__collapse-row groups__collapse-row--inner" type="flex" justify="space-between">
+                            <el-col>{{subGroup.name}}</el-col>
+                            <el-col :span="2">
+                                <el-button
+                                        class="groups__edit"
+                                        @click="editGroup(subGroup)"
+                                        type="primary" icon="el-icon-edit" circle></el-button>
+                            </el-col>
+                        </el-row>
                     </div>
                 </div>
                 <div v-else>
@@ -33,7 +42,9 @@
         </el-collapse>
         <groups-dialog
                 v-bind:visible.sync="dialog.visible"
-                :create="dialog.create"/>
+                :groupInfo.sync="dialog.group"
+                @update-group="getGroups"
+        />
     </el-container>
 </template>
 
@@ -50,7 +61,7 @@
 				groups: [],
 				dialog: {
 					visible: false,
-					create: true
+					group: {}
 				}
 			}
 		},
@@ -94,15 +105,47 @@
 			createGroup() {
 				this.dialog = {
 					visible: true,
-					create: true
+					group: {}
 				}
-			}
+			},
+			editGroup(group) {
+				this.dialog = {
+					visible: true,
+					group
+				}
+            }
 		}
 	}
 </script>
 
-<style>
+<style scoped lang="scss">
     .groups {
         padding: 10px;
+    }
+
+    .groups__edit {
+        opacity: 0;
+
+    }
+
+    .groups__collapse-row {
+        border: 1px solid #f0f0f0;
+        padding-left: 15px;
+        font-size: 15px;
+
+        &--inner {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        &:hover {
+            box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.13);
+            cursor: pointer;
+        }
+
+        &:hover .groups__edit {
+            opacity: 1;
+        }
     }
 </style>
