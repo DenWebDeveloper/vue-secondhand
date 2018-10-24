@@ -12,6 +12,10 @@
                         <i class="el-icon-document"></i>
                         <span>Групи</span>
                     </el-menu-item>
+                    <el-menu-item index="groups" :route="{name:'products'}">
+                        <i class="el-icon-document"></i>
+                        <span>Товари</span>
+                    </el-menu-item>
                     <el-menu-item index="settings" :route="{name:'settings'}">
                         <i class="el-icon-setting"></i>
                         <span>Налаштування</span>
