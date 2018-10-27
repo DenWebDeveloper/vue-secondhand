@@ -7,32 +7,30 @@
             width="90%">
         <el-form :model="group" ref="groupForm" label-width="150px">
             <el-row type="flex" justify="space-between">
-                <el-col :span="17">
+                <el-col :span="14">
                     <el-form-item
                             prop="name"
                             label="Назва групи"
                             :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
                         <el-input v-model="group.name"></el-input>
                     </el-form-item>
-                    <el-form-item
-                            v-for="(item, index) in group.subGroups"
-                            :label="'Назва підгрупи ' + (index + 1)"
-                            :key="item.id"
-                            :prop="'subGroups.' + index + '.name'"
-                            :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
-                        <el-input v-model="item.name">
-                            <template slot="append">
-                                <el-button class="group__button-append--warning" type="primary"
-                                           @click.prevent="editSubGroup(index)">Редагувати
-                                </el-button>
-                                <el-button class="group__button-append--danger" type="danger"
-                                           @click.prevent="removeSubGroup(index)">Видалити
-                                </el-button>
-                            </template>
-                        </el-input>
+                    <el-form-item label="Батьківська група">
+                        <el-select v-model="group.parentGroupId"
+                                   :disabled="group.isTopLevelGroup"
+                                   filterable clearable placeholder="Виберіть групу">
+                            <el-option
+                                    v-for="item in filterAllGroup"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
                     </el-form-item>
-                    <el-form-item>
-                        <el-button @click.prevent="addSubGroup()">Додати підгрупу</el-button>
+                    <el-form-item
+                            prop="shortDescription"
+                            label="Короткий опис"
+                            :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
+                        <el-input v-model="group.shortDescription"></el-input>
                     </el-form-item>
                     <el-form-item
                             prop="description"
@@ -41,44 +39,47 @@
                         <el-input type="textarea" v-model="group.description"></el-input>
                     </el-form-item>
                 </el-col>
-                <el-col :span="6">
-                    <el-upload
-                            :thumbnail-mode="true"
-                            class="group-uploader"
-                            :on-success="uploadSuccess"
-                            :limit="1"
-                            :action="`http://temppostasp-001-site1.atempurl.com/api/images/${group.id}/groups`">
-                        <div slot="tip" class="el-upload__tip">jpg/png files with a size less than 500kb. Limit:1
-                            photo
-                        </div>
-                        <i class="el-icon-plus group-uploader-icon"></i>
-                    </el-upload>
-                    <img v-if="imgLoad" :src="`http://temppostasp-001-site1.atempurl.com//images/groups/${group.id}`"
-                         alt="">
+                <el-col :span="10">
+                    <el-form-item>
+                        <el-checkbox
+                                v-model="group.isTopLevelGroup"
+                                :disabled="parseInt(group.parentGroupId)">Група вищого рівня(основне меню)
+                        </el-checkbox>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-checkbox v-model="group.visibleMenu">Видима (показувати у меню)</el-checkbox>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-upload
+                                :thumbnail-mode="true"
+                                class="group-uploader"
+                                :on-success="uploadSuccess"
+                                :limit="1"
+                                :action="`http://acgproduct-001-site1.gtempurl.com/api/images/${group.id}/groups`">
+                            <div slot="tip" class="el-upload__tip">jpg/png files with a size less than 500kb. Limit:1
+                                photo
+                            </div>
+                            <i class="el-icon-plus group-uploader-icon"></i>
+                        </el-upload>
+                        <img v-if="imgLoad"
+                             :src="`http://temppostasp-001-site1.atempurl.com//images/groups/${group.id}`"
+                             alt="">
+                    </el-form-item>
                 </el-col>
             </el-row>
         </el-form>
         <div slot="footer" class="dialog-footer">
-            <el-button @click="handleClose">Приховати вікно</el-button>
+            <el-button @click="handleClose">Закрити вікно</el-button>
+            <el-button type="warning" @click="toggleVisibleGroup">{{group.isVisible?'Приховати':'Показати'}}</el-button>
             <el-button type="danger" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
-        <sub-groups-dialog
-                v-bind:visible.sync="subDialog.visible"
-                :groupInfo.sync="subDialog.group"
-                :parentGroup.sync="group"
-                @update-group="getGroups"/>
     </el-dialog>
 </template>
 
 <script>
-	import SubGroupsDialog from './SubGroupsDialog'
-
 	export default {
 		name: 'GroupsDialog',
-		components: {
-			SubGroupsDialog
-		},
 		props: {
 			visible: Boolean,
 			groupInfo: Object
@@ -86,11 +87,15 @@
 		data() {
 			return {
 				imgLoad: '',
+				allGroups: [],
 				group: {
 					id: '',
 					name: '',
-					subGroups: [],
-					description: ''
+					description: '',
+					shortDescription: '',
+					isTopLevelGroup: true,
+					visibleMenu: true,
+					parentGroupId: ''
 				},
 				subDialog: {
 					visible: false,
@@ -100,14 +105,37 @@
 		},
 		computed: {
 			isCreate() {
-				return this.groupInfo.id === 'undefined'
+				return typeof this.groupInfo.id === 'undefined'
+			},
+			filterAllGroup() {
+				return this.allGroups.filter(item => {
+					return item.id !== this.group.id
+				})
 			}
 		},
 		methods: {
+			getAllGroups() {
+				this.$api('/groups').then(res => {
+					this.allGroups = res.data
+				}).catch(err => {
+					this.$notify.error({
+						title: 'Сталась помилка',
+						message: `Не вдалось завантажити список усіх груп. ${err.messages}`,
+						duration: 0
+					})
+				})
+			},
 			handleOpen() {
 				if (this.isCreate) {
-					this.$api.post('/groups', {name: 'Нова група', isTopLevelGroup: 1}).then(res => {
-						this.$set(this.group, 'id', res.data.id)
+					this.$api.post('/groups', {
+						name: 'Нова група',
+						isTopLevelGroup: 1,
+					}).then(res => {
+						console.log(res.data)
+						this.group = res.data
+						window.z = this
+						this.$api(`/groups/${res.data.id}/images`)
+
 					}).catch(err => {
 						this.$notify.error({
 							title: 'Сталась помилка',
@@ -118,26 +146,19 @@
 				} else {
 					this.group = this.groupInfo
 				}
+				this.getAllGroups()
 				this.$refs['groupForm'].resetFields()
-			},
-			addSubGroup() {
-				this.subDialog = {
-					visible: true,
-					group: {}
-				}
-			},
-			editSubGroup(index) {
-				this.group.subGroups.splice(index, 1)
-			},
-			removeSubGroup(index) {
-				this.group.subGroups.splice(index, 1)
 			},
 			submitForm() {
 				this.$refs['groupForm'].validate((valid) => {
 					if (!valid) return false
-					const {name, description} = this.group
+					const {name, description, parentGroupId, isTopLevelGroup, isVisible, isActive} = this.group
 					this.$api.put(`/groups/${this.group.id}`, {
-						name, description
+						name, description,
+						parentGroupId,
+						isTopLevelGroup: Number(isTopLevelGroup),
+						isVisible: Number(isVisible),
+						isActive: Number(isActive),
 					}).then(() => {
 						this.$emit('update:visible', false)
 						this.$emit('update-group')
@@ -155,6 +176,15 @@
 					done()
 				}
 			},
+			toggleVisibleGroup() {
+				const {isVisible} = this.group
+				this.$api.put(`/groups/${this.group.id}`, {
+					isVisible: !isVisible
+				}).then(() => {
+					this.$emit('update:visible', false)
+					this.$emit('update-group')
+				})
+            },
 			deleteGroup() {
 				this.$api.delete(`/groups/${this.group.id}`).then(() => {
 					this.$emit('update:visible', false)

@@ -205,7 +205,7 @@
 		methods: {
 			getOrders(searchParams = {}) {
 				const params = {
-					isActive: Number(this.activeSearch),
+					isActive: this.activeSearch,
 					...searchParams
 				}
 				this.loadingOrderTable = true

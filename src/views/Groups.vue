@@ -72,7 +72,7 @@
 			getGroups() {
 				this.$api.get('/groups', {
 					params: {
-						isTopLevelGroup: 1
+						isTopLevelGroup: true
 					}
 				}).then(res => {
 					this.groups = res.data
@@ -90,12 +90,12 @@
 				const activeGroup = groups[val]
 
 				if (activeGroup.subGroupLoad) return
-				this.$api.get(`/groups/${activeGroup.parentGroupId}/groups/`).then(res => {
+				this.$api.get(`/groups/${activeGroup.id}/groups/`).then(res => {
 					activeGroup.subGroupLoad = true
 					activeGroup.subGroups = res.data
 					this.groups = groups
 				}).catch(err => {
-					this.$notify({
+					this.$notify.error({
 						title: 'Сталась помилка',
 						message: `Обновіть сторінку. ${err}`,
 						duration: 0

@@ -2,13 +2,13 @@ import Cookies from 'js-cookie'
 import axios from 'axios'
 
 const api = axios.create({
-	baseURL: 'http://temppostasp-001-site1.atempurl.com/api',
+	baseURL: 'http://acgproduct-001-site1.gtempurl.com/api',
 	timeout: 5000,
 })
 
 api.interceptors.request.use((config) => {
 	const token = Cookies.get('token')
-	if (token) config.headers.Token = token
+	if (token) config.headers.Authorization = token
 	return config
 }, (err) => {
 	// Do something with request error
