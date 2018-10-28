@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie'
 import axios from 'axios'
+import router from '../router'
 
 const api = axios.create({
 	baseURL: 'http://acgproduct-001-site1.gtempurl.com/api',
@@ -21,7 +22,7 @@ api.interceptors.response.use((response) => {
 }, (err) => {
 	if (err.response && err.response.status === 401) {
 		Cookies.remove('token')
-		window.href = '/'
+		router.push({name:'auth'})
 	}
 	return Promise.reject(err)
 })

@@ -51,19 +51,20 @@
                     </el-form-item>
                     <el-form-item>
                         <el-upload
-                                :thumbnail-mode="true"
                                 class="group-uploader"
                                 :on-success="uploadSuccess"
+                                :on-error="uploadError"
                                 :limit="1"
-                                :action="`http://acgproduct-001-site1.gtempurl.com/api/images/${group.id}/groups`">
-                            <div slot="tip" class="el-upload__tip">jpg/png files with a size less than 500kb. Limit:1
-                                photo
-                            </div>
+                                accept="image/*"
+                                ref="upload"
+                                drag
+                                :action="`http://acgproduct-001-site1.gtempurl.com/api/groups/image/${group.id}`">
+                            <div slot="tip" class="el-upload__tip">Limit:1 photo</div>
                             <i class="el-icon-plus group-uploader-icon"></i>
                         </el-upload>
                         <img v-if="imgLoad"
                              :src="`http://temppostasp-001-site1.atempurl.com//images/groups/${group.id}`"
-                             alt="">
+                             alt="Preview">
                     </el-form-item>
                 </el-col>
             </el-row>
@@ -165,6 +166,10 @@
 					})
 				})
 			},
+			uploadError(err) {
+                this.$notifyError({errMsg:err})
+				this.$refs.upload.clearFiles()
+            },
 			uploadSuccess() {
 				this.imgLoad = true
 			},
@@ -179,7 +184,7 @@
 			toggleVisibleGroup() {
 				const {isVisible} = this.group
 				this.$api.put(`/groups/${this.group.id}`, {
-					isVisible: !isVisible
+					...this.group, ...{isVisible: !isVisible}
 				}).then(() => {
 					this.$emit('update:visible', false)
 					this.$emit('update-group')

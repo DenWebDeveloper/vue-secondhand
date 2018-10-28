@@ -2,16 +2,16 @@
     <el-container style="display: flex;justify-content: center;">
         <el-form :model="info" :rules="rules" ref="infoForm" label-width="175px" class="bg-white info-form">
             <el-form-item label="Ім'я" prop="name">
-                <el-input v-model="info.name"></el-input>
+                <el-input :value="info.name" @input="hangleInput('name', $event)"></el-input>
             </el-form-item>
             <el-form-item label="Розташування" prop="location">
-                <el-input v-model="info.location"></el-input>
+                <el-input :value="info.location" @input="hangleInput('location', $event)"></el-input>
             </el-form-item>
             <el-form-item label="Розташування на карті" prop="mapLocation">
-                <el-input v-model="info.mapLocation"></el-input>
+                <el-input :value="info.mapLocation" @input="hangleInput('mapLocation', $event)"></el-input>
             </el-form-item>
-            <el-form-item label="Телефон" prop="telephones">
-                <el-input v-model="info.telephones"></el-input>
+            <el-form-item label="Телефон" prop="telephones" @input="hangleInput('telephones', $event)">
+                <el-input :value="info.telephones"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="submitInfoForm">Зберегти</el-button>
@@ -50,6 +50,10 @@
 			})
 		},
 		methods: {
+			hangleInput(name, val) {
+				const info = {...this.info, [name]:val}
+				this.$store.commit(types.SET_BASE_INFO, {info})
+			},
 			submitInfoForm() {
 				this.$refs['infoForm'].validate((valid) => {
 					if (!valid) return false
@@ -61,11 +65,7 @@
 							type: 'success'
 						})
 					}).catch(err => {
-						this.$notify.error({
-							title: 'Ой, не все добре :(',
-							message: 'Сталась помилка. Спробуйте оновити сторінку. ' + err.message,
-							duration: 12000,
-						})
+						this.$notifyError({errMsg:err.message})
 					})
 				})
 			}

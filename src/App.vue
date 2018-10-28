@@ -13,7 +13,7 @@
 
 	export default {
 		name: 'App',
-		beforeMount() {
+		beforeMount() { // Інформація використовується в header тому завантажуємо в корні проекта
 			this.$store.dispatch(types.GET_BASE_INFO)
 		}
 	}

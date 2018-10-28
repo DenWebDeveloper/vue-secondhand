@@ -15,6 +15,12 @@ Vue.config.productionTip = false
 
 Vue.prototype.$api = api
 
+Vue.prototype.$notifyError = ({errMsg, duration}) => ElementUI.Notification.error({
+	title: 'Помилка :(',
+	message: errMsg,
+	duration: duration ? duration : 5000,
+})
+
 new Vue({
 	router,
 	store,
