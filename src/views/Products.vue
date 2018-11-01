@@ -41,56 +41,56 @@
 </template>
 
 <script>
-export default {
-    data() {
-        return {
-            productsList: [],
-            currentPage: 1,
-            // скільки елементів на сторінці
-            numberElementsOnThePage: 2,
-            // кількість всіх елементів
-            allProductsNumber: 0,
-        }
-    },
-    methods: {
-        // запит на нову кількість продуктів
-        newPage() {
-             this.$api.get('/products',{
-                params: {
-                    startPosition: this.numberElementsOnThePage * (this.currentPage - 1),
-                    numberOfItems: this.numberElementsOnThePage,
-                }
-            })
-            .then(response => {
-                console.log(response);
-                this.productsList = response.data;
-            })
-            .catch(err => console.error(err));
-            // запит на загальну кількість елементів??
-        }
-    },
-    created() {
-        // отримуємо numberElementsOnThePage - елементів
-        this.$api.get('/products',{
-                params: {
-                    startPosition: this.numberElementsOnThePage * (this.currentPage - 1),
-                    numberOfItems: this.numberElementsOnThePage,
-                }
-            })
-            .then(response => {
-                console.log(response);
-                // return JSON.parse(response);
-                this.productsList = response.data;
-            })
-            .catch(err => console.error(err));
-        // отримуєм allProductsNumber
-        this.$api.get('/products/count')
-            .then(response => {
-                console.log(response.data);
-                this.allProductsNumber = response.data;
-            });
-    }
-}
+	export default {
+		data() {
+			return {
+				productsList: [],
+				currentPage: 1,
+				// скільки елементів на сторінці
+				numberElementsOnThePage: 2,
+				// кількість всіх елементів
+				allProductsNumber: 0,
+			}
+		},
+		methods: {
+			// запит на нову кількість продуктів
+			newPage() {
+				this.$api.get('/products',{
+					params: {
+						startPosition: this.numberElementsOnThePage * (this.currentPage - 1),
+						numberOfItems: this.numberElementsOnThePage,
+					}
+				})
+					.then(response => {
+						console.log(response)
+						this.productsList = response.data
+					})
+					.catch(err => console.error(err))
+					// запит на загальну кількість елементів??
+			}
+		},
+		created() {
+			// отримуємо numberElementsOnThePage - елементів
+			this.$api.get('/products',{
+				params: {
+					startPosition: this.numberElementsOnThePage * (this.currentPage - 1),
+					numberOfItems: this.numberElementsOnThePage,
+				}
+			})
+				.then(response => {
+					console.log(response)
+					// return JSON.parse(response);
+					this.productsList = response.data
+				})
+				.catch(err => console.error(err))
+			// отримуєм allProductsNumber
+			this.$api.get('/products/count')
+				.then(response => {
+					console.log(response.data)
+					this.allProductsNumber = response.data
+				})
+		}
+	}
 </script>
 
 <style scoped>

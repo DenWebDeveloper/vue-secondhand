@@ -14,6 +14,15 @@
                             :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
                         <el-input v-model="group.name"></el-input>
                     </el-form-item>
+                    <el-form-item>
+                        <el-checkbox
+                                v-model="group.isTopLevelGroup"
+                                :disabled="!!group.parentGroupId">Група вищого рівня(основне меню)
+                        </el-checkbox>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-checkbox v-model="group.visibleMenu">Видима (показувати у меню)</el-checkbox>
+                    </el-form-item>
                     <el-form-item label="Батьківська група">
                         <el-select v-model="group.parentGroupId"
                                    :disabled="group.isTopLevelGroup"
@@ -41,16 +50,9 @@
                 </el-col>
                 <el-col :span="10">
                     <el-form-item>
-                        <el-checkbox
-                                v-model="group.isTopLevelGroup"
-                                :disabled="parseInt(group.parentGroupId)">Група вищого рівня(основне меню)
-                        </el-checkbox>
-                    </el-form-item>
-                    <el-form-item>
-                        <el-checkbox v-model="group.visibleMenu">Видима (показувати у меню)</el-checkbox>
-                    </el-form-item>
-                    <el-form-item>
+                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px" @click="visibleGroup = true">Додати картинку</el-button>
                         <el-upload
+                                v-if="!imgId || visibleGroup"
                                 class="group-uploader"
                                 :on-success="uploadSuccess"
                                 :on-error="uploadError"
@@ -62,8 +64,9 @@
                             <div slot="tip" class="el-upload__tip">Limit:1 photo</div>
                             <i class="el-icon-plus group-uploader-icon"></i>
                         </el-upload>
-                        <img v-if="imgLoad"
-                             :src="`http://temppostasp-001-site1.atempurl.com//images/groups/${group.id}`"
+                        <img v-if="imgId"
+                             class="group-img-preview"
+                             :src="`http://acgproduct-001-site1.gtempurl.com/api/groups/${group.id}/images/${imgId}/content`"
                              alt="Preview">
                     </el-form-item>
                 </el-col>
@@ -71,7 +74,7 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="handleClose">Закрити вікно</el-button>
-            <el-button type="warning" @click="toggleVisibleGroup">{{group.isVisible?'Приховати':'Показати'}}</el-button>
+            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">{{group.isVisible?'Приховати':'Показати'}}</el-button>
             <el-button type="danger" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
@@ -87,8 +90,9 @@
 		},
 		data() {
 			return {
-				imgLoad: '',
+				imgId: null,
 				allGroups: [],
+				visibleGroup: false,
 				group: {
 					id: '',
 					name: '',
@@ -119,24 +123,24 @@
 				this.$api('/groups').then(res => {
 					this.allGroups = res.data
 				}).catch(err => {
-					this.$notify.error({
-						title: 'Сталась помилка',
-						message: `Не вдалось завантажити список усіх груп. ${err.messages}`,
-						duration: 0
-					})
+					this.handleClose()
+                    this.$notifyError({errMsg:`Не вдалось завантажити список усіх груп. ${err.messages}`})
+				})
+			},
+			getImgId(groupId) {
+				this.$api(`/groups/${groupId}/images`).then(res => {
+					if (res.data.length === 0) return null
+					this.imgId = res.data[0].id
 				})
 			},
 			handleOpen() {
+				this.imgId = null
 				if (this.isCreate) {
 					this.$api.post('/groups', {
-						name: 'Нова група',
-						isTopLevelGroup: 1,
+						name: 'Нова група'
 					}).then(res => {
-						console.log(res.data)
 						this.group = res.data
-						window.z = this
-						this.$api(`/groups/${res.data.id}/images`)
-
+						this.getImgId(res.data.id)
 					}).catch(err => {
 						this.$notify.error({
 							title: 'Сталась помилка',
@@ -146,23 +150,32 @@
 					})
 				} else {
 					this.group = this.groupInfo
+					this.getImgId(this.groupInfo.id)
 				}
 				this.getAllGroups()
-				this.$refs['groupForm'].resetFields()
+				this.$nextTick(() => {
+					this.$refs['groupForm'].resetFields()
+					this.$refs.upload.clearFiles()
+				})
 			},
 			submitForm() {
 				this.$refs['groupForm'].validate((valid) => {
 					if (!valid) return false
-					const {name, description, parentGroupId, isTopLevelGroup, isVisible, isActive} = this.group
+					const {name, description, parentGroupId, shortDescription, isTopLevelGroup, isVisible, isActive} = this.group
 					this.$api.put(`/groups/${this.group.id}`, {
 						name, description,
 						parentGroupId,
-						isTopLevelGroup: Number(isTopLevelGroup),
-						isVisible: Number(isVisible),
-						isActive: Number(isActive),
+						isTopLevelGroup: isTopLevelGroup,
+						isVisible: isVisible,
+						isActive: isActive,
+						shortDescription,
 					}).then(() => {
-						this.$emit('update:visible', false)
-						this.$emit('update-group')
+						this.$notify({
+							title: 'Все добре :)',
+							message: 'Всі данні збережені',
+							type: 'success'
+						})
+						this.handleClose()
 					})
 				})
 			},
@@ -171,7 +184,10 @@
 				this.$refs.upload.clearFiles()
             },
 			uploadSuccess() {
-				this.imgLoad = true
+				this.$api(`/groups/${this.group.id}/images`).then(res => {
+					this.imgId = res.data[0].id
+					this.$refs.upload.clearFiles()
+				})
 			},
 			handleClose(done) {
 				this.$emit('update:visible', false)
@@ -186,8 +202,7 @@
 				this.$api.put(`/groups/${this.group.id}`, {
 					...this.group, ...{isVisible: !isVisible}
 				}).then(() => {
-					this.$emit('update:visible', false)
-					this.$emit('update-group')
+					this.handleClose()
 				})
             },
 			deleteGroup() {
@@ -218,8 +233,16 @@
         font-weight: bold;
     }
 
+    .group-img-preview {
+        width: 100%;
+    }
+
+    .group-uploader .el-upload-dragger {
+        width: 100%;
+    }
+
     .group-uploader .el-upload {
-        border: 1px dashed #d9d9d9;
+        width: 100%;
         border-radius: 6px;
         cursor: pointer;
         position: relative;
