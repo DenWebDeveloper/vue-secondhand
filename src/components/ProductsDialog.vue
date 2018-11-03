@@ -8,22 +8,19 @@
         <el-form :model="group" ref="groupForm" label-width="150px">
             <el-row type="flex" justify="space-between">
                 <el-col :span="14">
-                    <el-form-item
-                            prop="name"
-                            label="Назва групи"
-                            :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
-                        <el-input v-model="group.name"></el-input>
+                    <el-form-item label="Назва групи" prop="nameGroup">
+                        <el-select v-model="group.parentGroupId"
+                                   :disabled="group.isTopLevelGroup"
+                                   filterable clearable placeholder="Виберіть групу">
+                            <el-option
+                                    v-for="item in filterAllGroup"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
                     </el-form-item>
-                    <el-form-item>
-                        <el-checkbox
-                                v-model="group.isTopLevelGroup"
-                                :disabled="!!group.parentGroupId">Група вищого рівня(основне меню)
-                        </el-checkbox>
-                    </el-form-item>
-                    <el-form-item>
-                        <el-checkbox v-model="group.visibleMenu">Видима (показувати у меню)</el-checkbox>
-                    </el-form-item>
-                    <el-form-item label="Батьківська група">
+                    <el-form-item label="Назва підгрупи" prop="nameSubGroup">
                         <el-select v-model="group.parentGroupId"
                                    :disabled="group.isTopLevelGroup"
                                    filterable clearable placeholder="Виберіть групу">
@@ -36,10 +33,40 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item
-                            prop="shortDescription"
-                            label="Короткий опис"
+                            prop="name"
+                            label="Назва товару"
                             :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
-                        <el-input v-model="group.shortDescription"></el-input>
+                        <el-input v-model="group.name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Розмір">
+                        <el-select v-model="group.parentGroupId"
+                                   :disabled="group.isTopLevelGroup"
+                                   filterable clearable placeholder="Виберіть розмір">
+                            <el-option
+                                    v-for="item in filterAllGroup"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="Колір">
+                        <el-select v-model="group.parentGroupId"
+                                   :disabled="group.isTopLevelGroup"
+                                   filterable clearable placeholder="Виберіть розмір">
+                            <el-option
+                                    v-for="item in filterAllGroup"
+                                    :key="item.id"
+                                    :label="item.name"
+                                    :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item
+                            prop="description"
+                            label="Ціна"
+                            :rules="{ required: true, message: 'Поле не може бути пустим', trigger: 'blur'}">
+                        <el-input type="textarea" v-model="group.description"></el-input>
                     </el-form-item>
                     <el-form-item
                             prop="description"
@@ -50,7 +77,9 @@
                 </el-col>
                 <el-col :span="10">
                     <el-form-item>
-                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px" @click="visibleGroup = true">Додати картинку</el-button>
+                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px"
+                                   @click="visibleGroup = true">Додати картинку
+                        </el-button>
                         <el-upload
                                 v-if="!imgId || visibleGroup"
                                 class="group-uploader"
@@ -74,7 +103,9 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="handleClose">Закрити вікно</el-button>
-            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">{{group.isVisible?'Приховати':'Показати'}}</el-button>
+            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">
+                {{group.isVisible?'Приховати':'Показати'}}
+            </el-button>
             <el-button type="danger" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
@@ -83,11 +114,18 @@
 
 <script>
 	import {bus} from '../helpers/bus'
+
 	export default {
-		name: 'GroupsDialog',
+		name: 'ProductsDialog',
 		props: {
-			visible: Boolean,
-			groupInfo: Object
+			visible: {
+				type: Boolean,
+				required: true
+			},
+			productInfo: {
+				type: Object,
+				required: true
+			}
 		},
 		data() {
 			return {
@@ -111,12 +149,7 @@
 		},
 		computed: {
 			isCreate() {
-				return typeof this.groupInfo.id === 'undefined'
-			},
-			filterAllGroup() {
-				return this.allGroups.filter(item => {
-					return item.id !== this.group.id
-				})
+				return typeof this.productInfo.id === 'undefined'
 			}
 		},
 		methods: {
@@ -125,7 +158,7 @@
 					this.allGroups = res.data
 				}).catch(err => {
 					this.handleClose()
-                    this.$notifyError({errMsg:`Не вдалось завантажити список усіх груп. ${err.messages}`})
+					this.$notifyError({errMsg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
 				})
 			},
 			getImgId(groupId) {
@@ -182,9 +215,9 @@
 				})
 			},
 			uploadError(err) {
-                this.$notifyError({errMsg:err})
+				this.$notifyError({errMsg: err})
 				this.$refs.upload.clearFiles()
-            },
+			},
 			uploadSuccess() {
 				this.$api(`/groups/${this.group.id}/images`).then(res => {
 					this.imgId = res.data[0].id
@@ -206,7 +239,7 @@
 				}).then(() => {
 					this.handleClose()
 				})
-            },
+			},
 			deleteGroup() {
 				this.$api.delete(`/groups/${this.group.id}`).then(() => {
 					this.$emit('update:visible', false)

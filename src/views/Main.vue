@@ -13,7 +13,7 @@
                         <span>Групи</span>
                     </el-menu-item>
                     <el-menu-item index="groups" :route="{name:'products'}">
-                        <i class="el-icon-document"></i>
+                        <i class="el-icon-goods"></i>
                         <span>Товари</span>
                     </el-menu-item>
                     <el-menu-item index="settings" :route="{name:'settings'}">
@@ -31,7 +31,6 @@
 
 <script>
 	import Header from '../components/Header'
-	import Footer from '../components/Footer'
 
 	export default {
 		name: 'Main',

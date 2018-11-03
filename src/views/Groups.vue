@@ -1,5 +1,5 @@
 <template>
-    <el-container direction="vertical" class="groups bg-white">
+    <el-container direction="vertical" class="bg-white" style="padding: 10px">
         <el-row type="flex" align="middle">
             <el-col :span="4">
                 <h2>Групи</h2>
@@ -9,68 +9,46 @@
                 </el-button>
             </el-col>
             <el-col :span="5">
-                <el-checkbox v-model="allGroups">Показати всі групи</el-checkbox>
+                <el-checkbox v-model="allGroupsVisible">Показати всі групи</el-checkbox>
             </el-col>
         </el-row>
-        <groups-tree :groups="groups" @edit-group="editGroup"/>
+        <groups-all-list v-if="allGroupsVisible" :visible="allGroupsVisible"/>
+        <groups-tree v-else/>
         <groups-dialog
                 v-bind:visible.sync="dialog.visible"
                 :groupInfo.sync="dialog.group"
-                @update-group="getGroups"
         />
+        <!--@update-group="getGroups"-->
     </el-container>
 </template>
 
 <script>
+	import {bus} from '../helpers/bus'
+
 	import GroupsDialog from '../components/GroupsDialog'
 	import GroupsTree from '../components/GroupsTree'
+	import GroupsAllList from '../components/GroupsAllList'
 
 	export default {
 		name: 'Groups',
 		components: {
 			GroupsDialog,
-			GroupsTree
+			GroupsTree,
+			GroupsAllList
 		},
 		data() {
 			return {
-				activeCollapse: '',
-				allGroups: false,
-				groups: [],
+				allGroupsVisible: false,
 				dialog: {
 					visible: false,
 					group: {}
 				}
 			}
 		},
-		watch: {
-			allGroups() {
-				this.getGroups()
-			}
-		},
-		beforeMount() {
-			this.getGroups()
+		created() {
+			bus.$on('editGroup', this.editGroup)
 		},
 		methods: {
-			getGroups() {
-				let params = {
-					isTopLevelGroup: true
-				}
-				if (this.allGroups) params = {}
-
-				this.$api.get('/groups', {
-					params
-				}).then(res => {
-					this.groups = res.data
-					this.activeCollapse = ''
-				}).catch(err => {
-					this.activeCollapse = ''
-					this.$notify({
-						title: 'Сталась помилка',
-						message: `Обновіть сторінку. ${err}`,
-						duration: 0
-					})
-				})
-			},
 			createGroup() {
 				this.dialog = {
 					visible: true,
@@ -82,13 +60,7 @@
 					visible: true,
 					group
 				}
-            }
+			}
 		}
 	}
 </script>
-
-<style scoped lang="scss">
-    .groups {
-        padding: 10px;
-    }
-</style>
