@@ -5,15 +5,14 @@
             :before-close="handleClose"
             @open="handleOpen"
             width="90%">
-        <el-form :model="group" ref="groupForm" label-width="150px">
+        <el-form :model="group" ref="productForm" label-width="150px">
             <el-row type="flex" justify="space-between">
                 <el-col :span="14">
                     <el-form-item label="Назва групи" prop="nameGroup">
-                        <el-select v-model="group.parentGroupId"
-                                   :disabled="group.isTopLevelGroup"
+                        <el-select v-model="product.nameGroupTopLevel"
                                    filterable clearable placeholder="Виберіть групу">
                             <el-option
-                                    v-for="item in filterAllGroup"
+                                    v-for="item in allGroupsTopLevel"
                                     :key="item.id"
                                     :label="item.name"
                                     :value="item.id">
@@ -21,11 +20,11 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="Назва підгрупи" prop="nameSubGroup">
-                        <el-select v-model="group.parentGroupId"
-                                   :disabled="group.isTopLevelGroup"
+                        <el-select v-model="product.subGroup"
+                                   :disabled="product.nameGroupTopLevel.length === 0"
                                    filterable clearable placeholder="Виберіть групу">
                             <el-option
-                                    v-for="item in filterAllGroup"
+                                    v-for="item in subGroups"
                                     :key="item.id"
                                     :label="item.name"
                                     :value="item.id">
@@ -130,20 +129,14 @@
 		data() {
 			return {
 				imgId: null,
+				allGroupsTopLevel: [],
+				subGroups: [],
+
 				allGroups: [],
 				visibleGroup: false,
-				group: {
-					id: '',
-					name: '',
-					description: '',
-					shortDescription: '',
-					isTopLevelGroup: true,
-					visibleMenu: true,
-					parentGroupId: ''
-				},
-				subDialog: {
-					visible: false,
-					group: {}
+				product: {
+					nameGroupTopLevel: '',
+					subGroup: ''
 				}
 			}
 		},
@@ -152,17 +145,33 @@
 				return typeof this.productInfo.id === 'undefined'
 			}
 		},
+		watch: {
+			'product.subGroup': function (val) {
+				if (val.length !== 0) this.getSubGroups()
+			}
+		},
 		methods: {
 			getAllGroups() {
-				this.$api('/groups').then(res => {
-					this.allGroups = res.data
+				this.$api('/groups', {
+					params: {
+						isTopLevelGroup: true
+					}
+				}).then(res => {
+					this.allGroupsTopLevel = res.data
 				}).catch(err => {
 					this.handleClose()
 					this.$notifyError({errMsg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
 				})
 			},
-			getImgId(groupId) {
-				this.$api(`/groups/${groupId}/images`).then(res => {
+			getSubGroups() {
+				this.$api(`/groups/${this.parentGroupId}/groups`).then(res => {
+					this.allGroupsTopLevel = res.data
+				}).catch(err => {
+					this.$notifyError({errMsg: `Не вдалось завантажити список підгруп. ${err.messages}`})
+				})
+			},
+			getImgId(productId) {
+				this.$api(`/groups/${productId}/images`).then(res => {
 					if (res.data.length === 0) return null
 					this.imgId = res.data[0].id
 				})
@@ -183,13 +192,13 @@
 						})
 					})
 				} else {
-					this.group = Object.assign({}, this.groupInfo)
+					this.group = Object.assign({}, this.productInfo)
 
 					this.getImgId(this.groupInfo.id)
 				}
 				this.getAllGroups()
 				this.$nextTick(() => {
-					this.$refs['groupForm'].clearValidate()
+					this.$refs['productForm'].clearValidate()
 					this.$refs.upload.clearFiles()
 				})
 			},
