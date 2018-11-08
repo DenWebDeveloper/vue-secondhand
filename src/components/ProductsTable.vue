@@ -80,7 +80,7 @@
             }
         },
         created() {
-            bus.$on('reloadProduct', this.getProducts)
+            bus.$on('reloadTableProducts', this.getProducts)
 
             this.debouncedGetProducts = debounce(this.getProducts, 1000)
         },
@@ -107,7 +107,7 @@
                 }
 
                 if (this.textSearch.length) {
-                    params = {...params, searchInput: this.textSearch}
+                    params = {...params, filter: this.textSearch}
                 }
 
                 this.loading = true

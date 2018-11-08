@@ -31,11 +31,7 @@
                 :activeProducts="filter.activeProducts"
                 :textSearch="filter.text"
         />
-        <products-dialog
-                v-bind:visible.sync="dialog.visible"
-                :product="dialog.product"
-                :create="dialog.create"
-        />
+        <products-dialog/>
     </el-container>
 </template>
 
@@ -55,65 +51,15 @@
         },
         data() {
             return {
-                dialog: {
-                    visible: false,
-                    create: true,
-                    product: {}
-                },
                 filter: {
                     text: '',
                     activeProducts: true
                 },
             }
         },
-        created() {
-            bus.$on('editProduct', this.editProduct)
-        },
         methods: {
             createProduct() {
-                this.dialog = {
-                    visible: true,
-                    create: true
-                }
-            },
-            editProduct(product) {
-                this.dialog = {
-                    visible: true,
-                    create: false,
-                    product
-                }
-            },
-            openOrder(index, order) {
-                const {id, paymentType, isPayed} = order
-                this.activeOrderInfo = {
-                    id,
-                    paymentType,
-                    isPayed,
-                    _index: index
-                }
-                const loading = this.$loading({
-                    lock: true,
-                    text: 'Loading',
-                    spinner: 'el-icon-loading',
-                    background: 'rgba(0, 0, 0, 0.7)'
-                })
-                this.$api.get(`/products/${id}/Items`).then(res => {
-                    loading.close()
-                    this.dialogVisibleOrder = true
-                    this.activeOrder = res.data
-                }).catch(err => {
-                    this.$notify({
-                        title: 'Сталась помилка',
-                        message: `Обновіть сторінку. ${err}`,
-                        duration: 0
-                    })
-                    loading.close()
-                })
-            },
-            closeDialogOrder() {
-                this.activeOrder = {}
-                this.activeOrderInfo = {}
-                this.dialogVisibleOrder = false
+                bus.$emit('createProduct')
             }
         }
     }

@@ -1,13 +1,12 @@
 <template>
     <div>
         <el-dialog
-                :title="`${create?'Створити':'Оновити'} групу`"
-                :visible="visibleProduct"
-                :before-close="handleClose"
-                @open="handleOpenGroupsGialog"
-                width="90%"
-                append-to-body>
-            <el-form :model="product" ref="productForm" label-width="150px">
+                :title="`${productDialog.create?'Створити':'Оновити'} групу`"
+                :visible.sync="productDialog.visible"
+                @close="resetDialogs"
+                @open="checkLoadGroups"
+                width="90%">
+            <el-form :model="product" ref="productForm" label-width="150px" label-position="top" >
                 <el-row type="flex" justify="space-between">
                     <el-col :span="14">
                         <el-form-item
@@ -16,7 +15,7 @@
                             <el-input v-model.trim="product.name"/>
                         </el-form-item>
                         <el-form-item prop="type">
-                            <el-checkbox v-model="product.isActive">Показати товар на сайті</el-checkbox>
+                            <el-checkbox v-model="product.isVisible">Показати товар на сайті</el-checkbox>
                         </el-form-item>
                         <el-form-item
                                 prop="groupId"
@@ -47,46 +46,56 @@
                                 label="Опис" prop="description">
                             <el-input type="textarea" v-model.trim="product.description"/>
                         </el-form-item>
+                        <fieldset>
+                            <legend>Детальні характеристики</legend>
+                            <el-form-item
+                                    v-for="(item, index) in product.productValues"
+                                    :label="'Детальна характеристика ' + (index + 1)"
+                                    :key="index">
+                                <el-input v-model="item.name"></el-input>
+                                <el-input style="margin-top:5px" v-model="item.value"></el-input>
+                                <el-button type="danger" style="margin-top:5px" @click.prevent="removeCharacteristic(item)">Видалити</el-button>
+                            </el-form-item>
+                            <el-button type="success" style="margin-left: auto;display: block;" @click.prevent="addCharacteristic">Додати</el-button>
+                        </fieldset>
+
                     </el-col>
-                    <el-col :span="10">
-                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px"
-                                   @click="visibleGroup = true">Додати картинку
-                        </el-button>
+                    <el-col :span="9" :offset="1">
                         <el-upload
-                                class="upload-demo"
+                                style="width: 100%"
                                 :action="`http://acgproduct-001-site1.gtempurl.com/api/products/${product.id}/images`"
                                 :on-preview="handlePreview"
                                 :on-remove="handleRemove"
                                 :file-list="productFilesList"
+                                multiple
+                                drag
                                 list-type="picture">
-                            <el-button size="small" type="primary">Click to upload</el-button>
-                            <div slot="tip">jpg/png files</div>
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
+                            <div class="el-upload__tip" slot="tip">jpg/png files</div>
                         </el-upload>
                     </el-col>
                 </el-row>
             </el-form>
             <div slot="footer" class="dialog-footer">
-                <el-button @click="handleClose">Закрити вікно</el-button>
-                <el-button v-if="!create" type="warning" @click="toggleVisibleGroup">
-                    {{group.isVisible?'Приховати':'Показати'}}
+                <el-button @click="resetDialogs">Закрити вікно</el-button>
+                <el-button type="danger" @click="deleteProduct">Видалити</el-button>
+                <el-button type="success" @click="submitProduct">{{productDialog.create?'Створити':'Оновити'}}
                 </el-button>
-                <el-button type="danger" @click="deleteGroup">Видалити</el-button>
-                <el-button type="success" @click="submitForm">{{create?'Створити':'Оновити'}}</el-button>
             </div>
         </el-dialog>
         <el-dialog
                 width="80%"
                 title="Створкння продукту. Виберіть групу"
                 center
-                @close="handleCloseGroupsGialog"
-                @open="handleOpenGroupsGialog"
-                :visible="visible">
+                @open="checkLoadGroups"
+                :visible.sync="groupDialog.visible">
             <el-row type="flex" justify="center">
-                <el-form :model="product" ref="dynamicValidateForm" label-width="120px">
+                <el-form :model="product" ref="groupsForm" label-width="120px">
                     <el-form-item
                             prop="groupId"
                             label="Назва групи"
-                            :rules="[{ required: true, message: 'Виберіть групу', trigger: ['blur','change']}]">
+                            :rules="requiredInputRule">
                         <el-select v-model="product.groupId"
                                    filterable clearable placeholder="Виберіть групу">
                             <el-option
@@ -100,8 +109,8 @@
                 </el-form>
             </el-row>
             <div slot="footer" class="dialog-footer">
-                <el-button @click="handleCloseGroupsGialog">Закрити</el-button>
-                <el-button type="primary" :disabled="!Boolean(product.groupId)" @click="openMainDialog">Далі
+                <el-button @click="groupDialog = {visible:false}">Закрити</el-button>
+                <el-button type="primary" :disabled="!Boolean(product.groupId)" @click="openProductDialog">Далі
                 </el-button>
             </div>
         </el-dialog>
@@ -111,271 +120,195 @@
 <script>
     import bus from '../helpers/bus'
 
+    const modelProduct = {
+        description: '',
+        groupId: '',
+        id: '',
+        imagePath: null,
+        isActive: true,
+        isVisible: false,
+        itemCount: 0,
+        name: '',
+        price: 0,
+        productValues: [],
+        shortDescription: '',
+    }
+
     export default {
         name: 'ProductsDialog',
-        props: {
-            visible: {
-                type: Boolean,// перше модальне вікно з групами
-                required: true
-            },
-            create: {
-                type: Boolean,
-                required: true
-            },
-            product: {
-                type: Object,
-                required: true
-            }
-        },
         data() {
             return {
                 requiredInputRule: [{required: true, message: 'Заповніть поле', trigger: ['blur', 'change']}],
-                imgId: null,
+
                 allGroups: [],
-                subGroups: [],
                 productFilesList: [],
-                visibleProduct: false,
-                product: {
-                    description: '',
-                    groupId: '',
-                    id: '',
-                    imagePath: null,
-                    isActive: true,
-                    isVisible: false,
-                    itemCount: 0,
-                    name: '',
-                    price: 0,
-                    productGroupModel: null,
-                    productValues: [],
-                    shortDescription: '',
+
+                groupDialog: {
+                    visible: false
                 },
+                productDialog: {
+                    visible: false,
+                    create: false
+                },
+
+                product: {...modelProduct}
             }
         },
-        watch: {
-            'product.subGroup': function (val) {
-                if (val.length !== 0) this.getSubGroups()
-            }
-        },
-        beforeMount() {
-            this.getImages()
+        created() {
+            bus.$on('editProduct', this.editProduct)
+            bus.$on('createProduct', this.createProduct)
         },
         methods: {
             // used
+
+            uploadError(err) {
+                this.$notifyError({msg: err})
+                this.$refs.upload.clearFiles()
+            },
+            /**
+             *
+             */
             getAllGroups() {
                 this.$api('/groups').then(res => {
                     this.allGroups = res.data
                 }).catch(err => {
-                    this.$notifyError({errMsg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
+                    this.$set(this.productDialog, 'visible', false)
+                    this.$set(this.groupDialog, 'visible', false)
+                    this.$notifyError({msg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
                 })
             },
-            getSubGroups() {
-                this.$api(`/groups/${this.parentGroupId}/groups`).then(res => {
-                    this.allGroupsTopLevel = res.data
-                }).catch(err => {
-                    this.$notifyError({errMsg: `Не вдалось завантажити список підгруп. ${err.messages}`})
-                })
-            },
-            getImgId(productId) {
-                this.$api(`/groups/${productId}/images`).then(res => {
-                    if (res.data.length === 0) return null
-                    this.imgId = res.data[0].id
-                })
-            },
-            handleOpen(create = true) {
-                this.imgId = null
-                if (create) {
-                    this.$api.post('/groups', {
-                        name: 'Нова група'
-                    }).then(res => {
-                        this.group = res.data
-                        this.getImgId(res.data.id)
-                    }).catch(err => {
-                        this.$notify.error({
-                            title: 'Сталась помилка',
-                            message: `Обновіть сторінку. ${err}`,
-                            duration: 0
-                        })
-                    })
-                } else {
-                    this.group = Object.assign({}, this.productInfo)
 
-                    this.getImgId(this.groupInfo.id)
+            resetDialogs() {
+                this.productFilesList = []
+                this.groupDialog = {
+                    visible: false
                 }
-                this.getAllGroups()
+                this.productDialog = {
+                    visible: false,
+                    create: false
+                }
+
+                this.product = {...modelProduct}
+
                 this.$nextTick(() => {
                     this.$refs['productForm'].clearValidate()
-                    this.$refs.upload.clearFiles()
+                    this.$refs['groupsForm'].clearValidate()
                 })
             },
-            submitForm() {
-                this.$refs['groupForm'].validate((valid) => {
-                    if (!valid) return false
-                    const {name, description, parentGroupId, shortDescription, isTopLevelGroup, isVisible, isActive} = this.group
-                    this.$api.put(`/groups/${this.group.id}`, {
-                        name, description,
-                        parentGroupId,
-                        isTopLevelGroup: isTopLevelGroup,
-                        isVisible: isVisible,
-                        isActive: isActive,
-                        shortDescription,
-                    }).then(() => {
-                        this.$notify({
-                            title: 'Все добре :)',
-                            message: 'Всі данні збережені',
-                            type: 'success'
-                        })
-                        this.handleClose()
-                    })
+            /**
+             * Detail characteristic
+             */
+            addCharacteristic() {
+                this.product. productValues.push({
+                    name: '',
+                    value:''
                 })
             },
-            uploadError(err) {
-                this.$notifyError({errMsg: err})
-                this.$refs.upload.clearFiles()
-            },
-            uploadSuccess() {
-                this.$api(`/groups/${this.group.id}/images`).then(res => {
-                    this.imgId = res.data[0].id
-                    this.$refs.upload.clearFiles()
-                })
-            },
-            handleClose(done) {
-                this.$emit('update:visible', false)
-                bus.$emit('updateGroups')
-                this.$emit('update:groupInfo', {})
-                if (typeof done === 'function') {
-                    done()
+
+            removeCharacteristic(item) {
+                const index = this.product.productValues.indexOf(item);
+                if (index !== -1) {
+                    this.product.productValues.splice(index, 1);
                 }
             },
-            toggleVisibleGroup() {
-                const {isVisible} = this.group
-                this.$api.put(`/groups/${this.group.id}`, {
-                    ...this.group, ...{isVisible: !isVisible}
-                }).then(() => {
-                    this.handleClose()
+            /**
+             *  Product actions
+             */
+            submitProduct() {
+                this.$refs['productForm'].validate(valid => {
+                    if (!valid) return false
+                    this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
+                        bus.$emit('reloadTableProducts')
+                        this.$notifySuccess()
+                    }).catch(err => {
+                        this.$notifyError({msg: `Не вдалося зберегти. ${err.message}`})
+                    })
                 })
             },
-            deleteGroup() {
-                this.$api.delete(`/groups/${this.group.id}`).then(() => {
-                    this.$emit('update:visible', false)
-                    this.$emit('update:groupInfo', {})
-                    this.$emit('update-group')
-                    this.$notify({
-                        title: 'Успішно',
-                        message: 'Група була видалена',
-                        duration: 3000,
-                        type: 'success'
-                    })
+            deleteProduct() {
+                this.$api.delete(`/products/${this.product.id}`).then(() => {
+                    this.resetDialogs()
+                    bus.$emit('reloadTableProducts')
                 }).catch(err => {
-                    this.$notify.error({
-                        title: 'Сталась помилка',
-                        message: `Можливо група не була видалена. ${err}`,
-                        duration: 0
-                    })
+                    this.$notifyError({msg: `Не вдалося видалити продукт. ${err.message}`})
                 })
             },
-            openMainDialog() {
+            /**
+             *  Hook product dialog
+             */
+            openProductDialog() {
                 this.$api.post('/products', {
                     groupId: this.product.groupId,
                     name: 'Новий продукт'
                 }).then(res => {
-                    this.handleCloseGroupsGialog()
-                    this.visibleProduct = true
+                    this.$set(this.productDialog, 'visible', true)
                     this.product = res.data
                 }).catch(err => {
-                    this.$notifyError({errMsg: `Не вдалось завантажити. ${err.message}`})
+                    this.$notifyError({msg: `Не вдалось завантажити. ${err.message}`})
                 }).finally(() => {
-                    this.handleCloseGroupsGialog()
+                    this.$set(this.groupDialog, 'visible', false)
                 })
             },
-            //used
-            handleOpenGroupsGialog() {
+            /**
+             *  -------
+             */
+            checkLoadGroups() {
                 if (!this.allGroups.length) this.getAllGroups()
-            },
-            handleCloseGroupsGialog() {
-                this.$emit('update:visible', false)
             },
             /**
              * Upload
              */
             getImages() {
-                this.$api(`/api/products/${this.produt.id}/images`).then(res => {
-                    console.log(res);
+                this.$api(`/products/${this.product.id}/images`).then(res => {
+                    //TODO змінити url перед сборкою
+                    this.productFilesList = res.data.map(item => {
+                        return {
+                            ...item, url: `
+                        http://acgproduct-001-site1.gtempurl.com/api/products/${this.product.id}/images/${item.id}/content
+                        `
+                        }
+                    })
                 }).catch(err => {
                     this.$notifyError({msg: `Не вдалось завантажити список картинок ${err}`})
                 })
             },
             handleRemove(file, fileList) {
-                console.log(file, fileList);
+                this.$api.delete(`/products/${this.product.id}/images/${file.id}`).then(() => {
+                    this.productFilesList = fileList
+                }).catch(err => {
+                    this.$notifyError({msg: `Сталась помилка. ${err}`})
+                })
             },
             handlePreview(file) {
                 console.log(file);
-            }
+            },
+            /**
+             * Init mode(create or not create) dialog
+             */
+            createProduct() {
+                this.groupDialog = {
+                    visible: true,
+                }
+                this.$set(this.productDialog, 'create', true)
+            },
+            editProduct(product) {
+                this.productDialog = {
+                    visible: true,
+                    create: false
+                }
+                this.product = product
+                this.getImages()
+            },
         }
     }
 </script>
 
-<style lang="scss">
-    .button-edit:hover {
-        font-weight: bold;
-    }
-
-    .group-img-preview {
+<style>
+    .el-upload {
         width: 100%;
     }
 
-    .group-uploader .el-upload-dragger {
+    .el-upload-dragger {
         width: 100%;
-    }
-
-    .group-uploader .el-upload {
-        width: 100%;
-        border-radius: 6px;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .group-uploader .el-upload:hover {
-        border-color: #409EFF;
-    }
-
-    .group-uploader-icon {
-        font-size: 28px;
-        color: #8c939d;
-        width: 178px;
-        height: 178px;
-        line-height: 178px;
-        text-align: center;
-    }
-
-    .group {
-        width: 178px;
-        height: 178px;
-        display: block;
-    }
-
-    .el-input-group__append {
-        border: none;
-
-        .group__button-append--danger.el-button {
-            color: #fff;
-            background-color: #f56c6c;
-            border: 1px solid #f56c6c;
-            border-radius: 0 4px 4px 0;
-
-            &:hover {
-                background-color: darken(#f56c6c, 20%);
-            }
-        }
-
-        .group__button-append--warning.el-button {
-            color: #fff;
-            background-color: #e6a23c;
-            border-color: #e6a23c;
-
-            &:hover {
-                background-color: darken(#e6a23c, 10%);
-            }
-        }
     }
 </style>
