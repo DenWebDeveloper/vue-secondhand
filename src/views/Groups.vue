@@ -23,7 +23,7 @@
 </template>
 
 <script>
-	import {bus} from '../helpers/bus'
+	import bus from '../helpers/bus'
 
 	import GroupsDialog from '../components/GroupsDialog'
 	import GroupsTree from '../components/GroupsTree'
