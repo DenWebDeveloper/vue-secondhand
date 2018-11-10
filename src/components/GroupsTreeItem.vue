@@ -40,7 +40,7 @@
 
 <script>
 	import GroupsTreeItem from './GroupsTreeItem'
-	import {bus} from '../helpers/bus'
+	import bus from '../helpers/bus'
 	// поставити watch на відкритість групи і якщо буде true  то завантажити осналльний список
 	export default {
 		name: 'GroupsTreeItem',

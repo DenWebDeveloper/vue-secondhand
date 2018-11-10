@@ -11,7 +11,7 @@
 </template>
 
 <script>
-	import {bus} from '../helpers/bus'
+	import bus from '../helpers/bus'
 
 	export default {
 		name: 'GroupsAllList',

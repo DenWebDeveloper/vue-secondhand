@@ -17,20 +17,20 @@ Vue.config.productionTip = false
 Vue.prototype.$api = api
 
 Vue.prototype.$notifyError = ({msg, duration}) => ElementUI.Notification.error({
-    title: 'Помилка :(',
-    message: msg,
-    duration: duration ? duration : 5000,
+	title: 'Помилка :(',
+	message: msg,
+	duration: duration ? duration : 5000,
 })
 
 Vue.prototype.$notifySuccess = () => ElementUI.Notification({
-    title: 'Все добре :)',
-    message: 'Всі данні збережені',
-    type: 'success'
+	title: 'Все добре :)',
+	message: 'Всі данні збережені',
+	type: 'success'
 })
 
 new Vue({
-    router,
-    store,
-    render: h => h(App)
+	router,
+	store,
+	render: h => h(App)
 }).$mount('#app')
 

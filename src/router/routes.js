@@ -19,12 +19,12 @@ const routes = [
 				name: 'settings',
 				path: 'settings',
 				component: () => import('../views/Settings.vue'),
-            },
-            {
-                name: 'products',
+			},
+			{
+				name: 'products',
 				path: 'products',
 				component: () => import('../views/Products.vue'),
-            }
+			}
 		]
 	},
 	{

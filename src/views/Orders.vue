@@ -203,6 +203,16 @@
 			})
 		},
 		methods: {
+			rejectOrder() {
+				this.$api.put(`/orders/${this.activeOrder.id}`,{
+					reject: true
+				})
+			},
+			resolveOrder() {
+				this.$api.put(`/orders/${this.activeOrder.id}`,{
+					resolve: true
+				})
+			},
 			getOrders(searchParams = {}) {
 				const params = {
 					isActive: this.activeSearch,

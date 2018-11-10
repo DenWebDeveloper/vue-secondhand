@@ -64,7 +64,6 @@
                         <el-upload
                                 style="width: 100%"
                                 :action="`http://acgproduct-001-site1.gtempurl.com/api/products/${product.id}/images`"
-                                :on-preview="handlePreview"
                                 :on-remove="handleRemove"
                                 :file-list="productFilesList"
                                 multiple
@@ -118,189 +117,186 @@
 </template>
 
 <script>
-    import bus from '../helpers/bus'
+	import bus from '../helpers/bus'
 
-    const modelProduct = {
-        description: '',
-        groupId: '',
-        id: '',
-        imagePath: null,
-        isActive: true,
-        isVisible: false,
-        itemCount: 0,
-        name: '',
-        price: 0,
-        productValues: [],
-        shortDescription: '',
-    }
+	const modelProduct = {
+		description: '',
+		groupId: '',
+		id: '',
+		imagePath: null,
+		isActive: true,
+		isVisible: false,
+		itemCount: 0,
+		name: '',
+		price: 0,
+		productValues: [],
+		shortDescription: '',
+	}
 
-    export default {
-        name: 'ProductsDialog',
-        data() {
-            return {
-                requiredInputRule: [{required: true, message: 'Заповніть поле', trigger: ['blur', 'change']}],
+	export default {
+		name: 'ProductsDialog',
+		data() {
+			return {
+				requiredInputRule: [{required: true, message: 'Заповніть поле', trigger: ['blur', 'change']}],
 
-                allGroups: [],
-                productFilesList: [],
+				allGroups: [],
+				productFilesList: [],
 
-                groupDialog: {
-                    visible: false
-                },
-                productDialog: {
-                    visible: false,
-                    create: false
-                },
+				groupDialog: {
+					visible: false
+				},
+				productDialog: {
+					visible: false,
+					create: false
+				},
 
-                product: {...modelProduct}
-            }
-        },
-        created() {
-            bus.$on('editProduct', this.editProduct)
-            bus.$on('createProduct', this.createProduct)
-        },
-        methods: {
-            // used
+				product: {...modelProduct}
+			}
+		},
+		created() {
+			bus.$on('editProduct', this.editProduct)
+			bus.$on('createProduct', this.createProduct)
+		},
+		methods: {
+			// used
 
-            uploadError(err) {
-                this.$notifyError({msg: err})
-                this.$refs.upload.clearFiles()
-            },
-            /**
-             *
-             */
-            getAllGroups() {
-                this.$api('/groups').then(res => {
-                    this.allGroups = res.data
-                }).catch(err => {
-                    this.$set(this.productDialog, 'visible', false)
-                    this.$set(this.groupDialog, 'visible', false)
-                    this.$notifyError({msg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
-                })
-            },
+			uploadError(err) {
+				this.$notifyError({msg: err})
+				this.$refs.upload.clearFiles()
+			},
+			/**
+			 *
+			 */
+			getAllGroups() {
+				this.$api('/groups').then(res => {
+					this.allGroups = res.data
+				}).catch(err => {
+					this.$set(this.productDialog, 'visible', false)
+					this.$set(this.groupDialog, 'visible', false)
+					this.$notifyError({msg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
+				})
+			},
 
-            resetDialogs() {
-                this.productFilesList = []
-                this.groupDialog = {
-                    visible: false
-                }
-                this.productDialog = {
-                    visible: false,
-                    create: false
-                }
+			resetDialogs() {
+				this.productFilesList = []
+				this.groupDialog = {
+					visible: false
+				}
+				this.productDialog = {
+					visible: false,
+					create: false
+				}
 
-                this.product = {...modelProduct}
+				this.product = {...modelProduct}
 
-                this.$nextTick(() => {
-                    this.$refs['productForm'].clearValidate()
-                    this.$refs['groupsForm'].clearValidate()
-                })
-            },
-            /**
-             * Detail characteristic
-             */
-            addCharacteristic() {
-                this.product. productValues.push({
-                    name: '',
-                    value:''
-                })
-            },
+				this.$nextTick(() => {
+					this.$refs['productForm'].clearValidate()
+					this.$refs['groupsForm'].clearValidate()
+				})
+			},
+			/**
+			 * Detail characteristic
+			 */
+			addCharacteristic() {
+				this.product. productValues.push({
+					name: '',
+					value:''
+				})
+			},
 
-            removeCharacteristic(item) {
-                const index = this.product.productValues.indexOf(item);
-                if (index !== -1) {
-                    this.product.productValues.splice(index, 1);
-                }
-            },
-            /**
-             *  Product actions
-             */
-            submitProduct() {
-                this.$refs['productForm'].validate(valid => {
-                    if (!valid) return false
-                    this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
-                        bus.$emit('reloadTableProducts')
-                        this.$notifySuccess()
-                    }).catch(err => {
-                        this.$notifyError({msg: `Не вдалося зберегти. ${err.message}`})
-                    })
-                })
-            },
-            deleteProduct() {
-                this.$api.delete(`/products/${this.product.id}`).then(() => {
-                    this.resetDialogs()
-                    bus.$emit('reloadTableProducts')
-                }).catch(err => {
-                    this.$notifyError({msg: `Не вдалося видалити продукт. ${err.message}`})
-                })
-            },
-            /**
-             *  Hook product dialog
-             */
-            openProductDialog() {
-                this.$api.post('/products', {
-                    groupId: this.product.groupId,
-                    name: 'Новий продукт'
-                }).then(res => {
-                    this.$set(this.productDialog, 'visible', true)
-                    this.product = res.data
-                }).catch(err => {
-                    this.$notifyError({msg: `Не вдалось завантажити. ${err.message}`})
-                }).finally(() => {
-                    this.$set(this.groupDialog, 'visible', false)
-                })
-            },
-            /**
-             *  -------
-             */
-            checkLoadGroups() {
-                if (!this.allGroups.length) this.getAllGroups()
-            },
-            /**
-             * Upload
-             */
-            getImages() {
-                this.$api(`/products/${this.product.id}/images`).then(res => {
-                    //TODO змінити url перед сборкою
-                    this.productFilesList = res.data.map(item => {
-                        return {
-                            ...item, url: `
+			removeCharacteristic(item) {
+				const index = this.product.productValues.indexOf(item)
+				if (index !== -1) {
+					this.product.productValues.splice(index, 1)
+				}
+			},
+			/**
+			 *  Product actions
+			 */
+			submitProduct() {
+				this.$refs['productForm'].validate(valid => {
+					if (!valid) return false
+					this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
+						bus.$emit('reloadTableProducts')
+						this.$notifySuccess()
+					}).catch(err => {
+						this.$notifyError({msg: `Не вдалося зберегти. ${err.message}`})
+					})
+				})
+			},
+			deleteProduct() {
+				this.$api.delete(`/products/${this.product.id}`).then(() => {
+					this.resetDialogs()
+					bus.$emit('reloadTableProducts')
+				}).catch(err => {
+					this.$notifyError({msg: `Не вдалося видалити продукт. ${err.message}`})
+				})
+			},
+			/**
+			 *  Hook product dialog
+			 */
+			openProductDialog() {
+				this.$api.post('/products', {
+					groupId: this.product.groupId,
+					name: 'Новий продукт'
+				}).then(res => {
+					this.$set(this.productDialog, 'visible', true)
+					this.product = res.data
+				}).catch(err => {
+					this.$notifyError({msg: `Не вдалось завантажити. ${err.message}`})
+				}).finally(() => {
+					this.$set(this.groupDialog, 'visible', false)
+				})
+			},
+			/**
+			 *  -------
+			 */
+			checkLoadGroups() {
+				if (!this.allGroups.length) this.getAllGroups()
+			},
+			/**
+			 * Upload
+			 */
+			getImages() {
+				this.$api(`/products/${this.product.id}/images`).then(res => {
+					//TODO змінити url перед сборкою
+					this.productFilesList = res.data.map(item => {
+						return {
+							...item, url: `
                         http://acgproduct-001-site1.gtempurl.com/api/products/${this.product.id}/images/${item.id}/content
                         `
-                        }
-                    })
-                }).catch(err => {
-                    this.$notifyError({msg: `Не вдалось завантажити список картинок ${err}`})
-                })
-            },
-            handleRemove(file, fileList) {
-                this.$api.delete(`/products/${this.product.id}/images/${file.id}`).then(() => {
-                    this.productFilesList = fileList
-                }).catch(err => {
-                    this.$notifyError({msg: `Сталась помилка. ${err}`})
-                })
-            },
-            handlePreview(file) {
-                console.log(file);
-            },
-            /**
-             * Init mode(create or not create) dialog
-             */
-            createProduct() {
-                this.groupDialog = {
-                    visible: true,
-                }
-                this.$set(this.productDialog, 'create', true)
-            },
-            editProduct(product) {
-                this.productDialog = {
-                    visible: true,
-                    create: false
-                }
-                this.product = product
-                this.getImages()
-            },
-        }
-    }
+						}
+					})
+				}).catch(err => {
+					this.$notifyError({msg: `Не вдалось завантажити список картинок ${err}`})
+				})
+			},
+			handleRemove(file, fileList) {
+				this.$api.delete(`/products/${this.product.id}/images/${file.id}`).then(() => {
+					this.productFilesList = fileList
+				}).catch(err => {
+					this.$notifyError({msg: `Сталась помилка. ${err}`})
+				})
+			},
+			/**
+			 * Init mode(create or not create) dialog
+			 */
+			createProduct() {
+				this.groupDialog = {
+					visible: true,
+				}
+				this.$set(this.productDialog, 'create', true)
+			},
+			editProduct(product) {
+				this.productDialog = {
+					visible: true,
+					create: false
+				}
+				this.product = product
+				this.getImages()
+			},
+		}
+	}
 </script>
 
 <style>

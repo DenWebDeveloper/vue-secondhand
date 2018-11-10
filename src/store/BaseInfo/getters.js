@@ -1,3 +1,3 @@
 export default {
-    getBaseInfo: state => state.info,
+	getBaseInfo: state => state.info,
 }

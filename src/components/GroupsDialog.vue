@@ -125,7 +125,7 @@
 					this.allGroups = res.data
 				}).catch(err => {
 					this.handleClose()
-                    this.$notifyError({errMsg:`Не вдалось завантажити список усіх груп. ${err.messages}`})
+					this.$notifyError({errMsg:`Не вдалось завантажити список усіх груп. ${err.messages}`})
 				})
 			},
 			getImgId(groupId) {
@@ -182,9 +182,9 @@
 				})
 			},
 			uploadError(err) {
-                this.$notifyError({errMsg:err})
+				this.$notifyError({errMsg:err})
 				this.$refs.upload.clearFiles()
-            },
+			},
 			uploadSuccess() {
 				this.$api(`/groups/${this.group.id}/images`).then(res => {
 					this.imgId = res.data[0].id
@@ -206,7 +206,7 @@
 				}).then(() => {
 					this.handleClose()
 				})
-            },
+			},
 			deleteGroup() {
 				this.$api.delete(`/groups/${this.group.id}`).then(() => {
 					this.$emit('update:visible', false)

@@ -75,8 +75,6 @@
 </template>
 
 <script>
-	import index from '../api/'
-
 	export default {
 		name: 'ModalOrders',
 		data() {
@@ -95,9 +93,3 @@
 		}
 	}
 </script>
-
-<style scoped>
-    .order-modal {
-
-    }
-</style>

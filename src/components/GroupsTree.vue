@@ -10,7 +10,7 @@
 </template>
 
 <script>
-	import {bus} from '../helpers/bus'
+	import bus from '../helpers/bus'
 
 	import GroupsThreeItem from './GroupsTreeItem'
 	export default {
