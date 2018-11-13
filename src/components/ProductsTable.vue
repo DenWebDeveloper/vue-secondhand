@@ -29,7 +29,7 @@
                 <template slot-scope="scope">
                     <el-button
                             size="mini"
-                            @click="editProduct(scope.$index, scope.row)">Відкрити замовлення
+                            @click="editProduct(scope.$index, scope.row)">Відкрити товар
                     </el-button>
                 </template>
             </el-table-column>

@@ -1,12 +1,12 @@
 <template>
     <div>
         <el-dialog
-                :title="`${productDialog.create?'Створити':'Оновити'} групу`"
+                :title="`${productDialog.create?'Створити':'Оновити'} продукт`"
                 :visible.sync="productDialog.visible"
                 @close="resetDialogs"
                 @open="checkLoadGroups"
                 width="90%">
-            <el-form :model="product" ref="productForm" label-width="150px" label-position="top" >
+            <el-form :model="product" ref="productForm" label-width="150px" label-position="top">
                 <el-row type="flex" justify="space-between">
                     <el-col :span="14">
                         <el-form-item
@@ -54,9 +54,13 @@
                                     :key="index">
                                 <el-input v-model="item.name"></el-input>
                                 <el-input style="margin-top:5px" v-model="item.value"></el-input>
-                                <el-button type="danger" style="margin-top:5px" @click.prevent="removeCharacteristic(item)">Видалити</el-button>
+                                <el-button type="danger" style="margin-top:5px"
+                                           @click.prevent="removeCharacteristic(item)">Видалити
+                                </el-button>
                             </el-form-item>
-                            <el-button type="success" style="margin-left: auto;display: block;" @click.prevent="addCharacteristic">Додати</el-button>
+                            <el-button type="success" style="margin-left: auto;display: block;"
+                                       @click.prevent="addCharacteristic">Додати
+                            </el-button>
                         </fieldset>
 
                     </el-col>
@@ -198,9 +202,9 @@
 			 * Detail characteristic
 			 */
 			addCharacteristic() {
-				this.product. productValues.push({
+				this.product.productValues.push({
 					name: '',
-					value:''
+					value: ''
 				})
 			},
 
@@ -219,17 +223,20 @@
 					this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
 						bus.$emit('reloadTableProducts')
 						this.$notifySuccess()
+						this.resetDialogs()
 					}).catch(err => {
 						this.$notifyError({msg: `Не вдалося зберегти. ${err.message}`})
 					})
 				})
 			},
 			deleteProduct() {
-				this.$api.delete(`/products/${this.product.id}`).then(() => {
-					this.resetDialogs()
-					bus.$emit('reloadTableProducts')
-				}).catch(err => {
-					this.$notifyError({msg: `Не вдалося видалити продукт. ${err.message}`})
+				this.$confirm('Ви впевнені що бажаєте видалити?').then(() => {
+					this.$api.delete(`/products/${this.product.id}`).then(() => {
+						this.resetDialogs()
+						bus.$emit('reloadTableProducts')
+					}).catch(err => {
+						this.$notifyError({msg: `Не вдалося видалити продукт. ${err.message}`})
+					})
 				})
 			},
 			/**

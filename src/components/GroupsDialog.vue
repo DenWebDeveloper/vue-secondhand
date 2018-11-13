@@ -50,7 +50,9 @@
                 </el-col>
                 <el-col :span="10">
                     <el-form-item>
-                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px" @click="visibleGroup = true">Додати картинку</el-button>
+                        <el-button v-if="imgId && !visibleGroup" style="margin-bottom: 10px"
+                                   @click="visibleGroup = true">Додати картинку
+                        </el-button>
                         <el-upload
                                 v-if="!imgId || visibleGroup"
                                 class="group-uploader"
@@ -74,7 +76,9 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="handleClose">Закрити вікно</el-button>
-            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">{{group.isVisible?'Приховати':'Показати'}}</el-button>
+            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">
+                {{group.isVisible?'Приховати':'Показати'}}
+            </el-button>
             <el-button type="danger" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
@@ -83,6 +87,7 @@
 
 <script>
 	import bus from '../helpers/bus'
+
 	export default {
 		name: 'GroupsDialog',
 		props: {
@@ -125,7 +130,7 @@
 					this.allGroups = res.data
 				}).catch(err => {
 					this.handleClose()
-					this.$notifyError({errMsg:`Не вдалось завантажити список усіх груп. ${err.messages}`})
+					this.$notifyError({errMsg: `Не вдалось завантажити список усіх груп. ${err.messages}`})
 				})
 			},
 			getImgId(groupId) {
@@ -182,7 +187,7 @@
 				})
 			},
 			uploadError(err) {
-				this.$notifyError({errMsg:err})
+				this.$notifyError({errMsg: err})
 				this.$refs.upload.clearFiles()
 			},
 			uploadSuccess() {
@@ -208,21 +213,23 @@
 				})
 			},
 			deleteGroup() {
-				this.$api.delete(`/groups/${this.group.id}`).then(() => {
-					this.$emit('update:visible', false)
-					this.$emit('update:groupInfo', {})
-					this.$emit('update-group')
-					this.$notify({
-						title: 'Успішно',
-						message: 'Група була видалена',
-						duration: 3000,
-						type: 'success'
-					})
-				}).catch(err => {
-					this.$notify.error({
-						title: 'Сталась помилка',
-						message: `Можливо група не була видалена. ${err}`,
-						duration: 0
+				this.$confirm('Ви впевнені що бажаєте видалити?').then(() => {
+					this.$api.delete(`/groups/${this.group.id}`).then(() => {
+						this.$emit('update:visible', false)
+						this.$emit('update:groupInfo', {})
+						this.$emit('update-group')
+						this.$notify({
+							title: 'Успішно',
+							message: 'Група була видалена',
+							duration: 3000,
+							type: 'success'
+						})
+					}).catch(err => {
+						this.$notify.error({
+							title: 'Сталась помилка',
+							message: `Можливо група не була видалена. ${err}`,
+							duration: 0
+						})
 					})
 				})
 			}
