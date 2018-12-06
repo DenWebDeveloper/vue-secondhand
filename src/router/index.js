@@ -7,7 +7,7 @@ import Cookies from 'js-cookie'
 Vue.use(VueRouter)
 
 const router = new VueRouter({
-	base: '/',
+	base: 'admin/',
 	routes: Routes
 })
 

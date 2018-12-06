@@ -70,6 +70,11 @@
                     <span>{{ scope.row.price}}</span>
                 </template>
             </el-table-column>
+            <el-table-column align="center" label="Дата створення">
+                <template slot-scope="scope">
+                    <span>{{new Date(scope.row.createdOn).toLocaleDateString()}}</span>
+                </template>
+            </el-table-column>
             <el-table-column align="center" label="">
                 <template slot-scope="scope">
                     <el-button

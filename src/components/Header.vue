@@ -13,7 +13,7 @@
 
 <script>
 	import { mapGetters } from 'vuex'
-	import * as types from '../store/actions.types'
+    import * as types from '../store/actions.types'
 	export default {
 		name: 'Header',
 		computed: {

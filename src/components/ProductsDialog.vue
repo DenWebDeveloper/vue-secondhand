@@ -52,11 +52,13 @@
                                     v-for="(item, index) in product.productValues"
                                     :label="'Детальна характеристика ' + (index + 1)"
                                     :key="index">
-                                <el-input v-model="item.name"></el-input>
-                                <el-input style="margin-top:5px" v-model="item.value"></el-input>
-                                <el-button type="danger" style="margin-top:5px"
-                                           @click.prevent="removeCharacteristic(item)">Видалити
-                                </el-button>
+                                <div class="detail-params">
+                                    <el-input style="margin: 5px" v-model="item.key"></el-input>
+                                    <el-input style="margin: 5px" v-model="item.value"></el-input>
+                                    <el-button type="danger" style="margin: 5px"
+                                               @click.prevent="removeCharacteristic(item)">Видалити
+                                    </el-button>
+                                </div>
                             </el-form-item>
                             <el-button type="success" style="margin-left: auto;display: block;"
                                        @click.prevent="addCharacteristic">Додати
@@ -70,6 +72,7 @@
                                 :action="`http://acgproduct-001-site1.gtempurl.com/api/products/${product.id}/images`"
                                 :on-remove="handleRemove"
                                 :file-list="productFilesList"
+                                :headers="headers"
                                 multiple
                                 drag
                                 list-type="picture">
@@ -80,6 +83,7 @@
                     </el-col>
                 </el-row>
             </el-form>
+
             <div slot="footer" class="dialog-footer">
                 <el-button @click="resetDialogs">Закрити вікно</el-button>
                 <el-button type="danger" @click="deleteProduct">Видалити</el-button>
@@ -122,6 +126,8 @@
 
 <script>
 	import bus from '../helpers/bus'
+	import Cookies from 'js-cookie'
+
 
 	const modelProduct = {
 		description: '',
@@ -141,6 +147,9 @@
 		name: 'ProductsDialog',
 		data() {
 			return {
+				headers: {
+					Authorization: Cookies.get('token')
+				},
 				requiredInputRule: [{required: true, message: 'Заповніть поле', trigger: ['blur', 'change']}],
 
 				allGroups: [],
@@ -203,7 +212,7 @@
 			 */
 			addCharacteristic() {
 				this.product.productValues.push({
-					name: '',
+					key: '',
 					value: ''
 				})
 			},
@@ -220,7 +229,7 @@
 			submitProduct() {
 				this.$refs['productForm'].validate(valid => {
 					if (!valid) return false
-					this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
+                    this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
 						bus.$emit('reloadTableProducts')
 						this.$notifySuccess()
 						this.resetDialogs()
@@ -313,5 +322,9 @@
 
     .el-upload-dragger {
         width: 100%;
+    }
+
+    .detail-params {
+        display: flex;
     }
 </style>

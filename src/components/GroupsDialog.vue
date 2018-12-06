@@ -16,16 +16,14 @@
                     </el-form-item>
                     <el-form-item>
                         <el-checkbox
-                                v-model="group.isTopLevelGroup"
-                                :disabled="!!group.parentGroupId">Група вищого рівня(основне меню)
+                                v-model="group.isTopLevelGroup">Група вищого рівня(основне меню)
                         </el-checkbox>
                     </el-form-item>
                     <el-form-item>
-                        <el-checkbox v-model="group.visibleMenu">Видима (показувати у меню)</el-checkbox>
+                        <el-checkbox v-model="group.isVisible">Видима (показувати на сайті)</el-checkbox>
                     </el-form-item>
                     <el-form-item label="Батьківська група">
                         <el-select v-model="group.parentGroupId"
-                                   :disabled="group.isTopLevelGroup"
                                    filterable clearable placeholder="Виберіть групу">
                             <el-option
                                     v-for="item in filterAllGroup"
@@ -59,6 +57,7 @@
                                 :on-success="uploadSuccess"
                                 :on-error="uploadError"
                                 :limit="1"
+                                :headers="headers"
                                 accept="image/*"
                                 ref="upload"
                                 drag
@@ -74,12 +73,14 @@
                 </el-col>
             </el-row>
         </el-form>
+        <products-table :loaded-group="group.products"/>
         <div slot="footer" class="dialog-footer">
             <el-button @click="handleClose">Закрити вікно</el-button>
-            <el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">
-                {{group.isVisible?'Приховати':'Показати'}}
-            </el-button>
-            <el-button type="danger" @click="deleteGroup">Видалити</el-button>
+            <!--<el-button v-if="!isCreate" type="warning" @click="toggleVisibleGroup">-->
+            <!--{{group.isVisible?'Приховати':'Показати'}}-->
+            <!--</el-button>-->
+            <el-button type="danger" @click="deleteForceGroup">Примусове видалення</el-button>
+            <el-button type="warning" @click="deleteGroup">Видалити</el-button>
             <el-button type="success" @click="submitForm">{{isCreate?'Створити':'Оновити'}}</el-button>
         </div>
     </el-dialog>
@@ -87,15 +88,24 @@
 
 <script>
 	import bus from '../helpers/bus'
+	import Cookies from 'js-cookie'
+	import ProductsTable from './ProductsTable'
+
 
 	export default {
 		name: 'GroupsDialog',
+		components: {
+			ProductsTable
+		},
 		props: {
 			visible: Boolean,
 			groupInfo: Object
 		},
 		data() {
 			return {
+				headers: {
+					Authorization: Cookies.get('token')
+				},
 				imgId: null,
 				allGroups: [],
 				visibleGroup: false,
@@ -105,7 +115,7 @@
 					description: '',
 					shortDescription: '',
 					isTopLevelGroup: true,
-					visibleMenu: true,
+					isVisible: true,
 					parentGroupId: ''
 				},
 				subDialog: {
@@ -113,6 +123,17 @@
 					group: {}
 				}
 			}
+		},
+		watch: {
+			'group.isTopLevelGroup': function (val) {
+				if(val) {
+					this.$set(this.group,'parentGroupId','')
+				}
+			},
+			'group.parentGroupId': function (val) {
+				if(val === null) return
+				this.$set(this.group,'isTopLevelGroup',val.length === 0)
+			},
 		},
 		computed: {
 			isCreate() {
@@ -215,9 +236,7 @@
 			deleteGroup() {
 				this.$confirm('Ви впевнені що бажаєте видалити?').then(() => {
 					this.$api.delete(`/groups/${this.group.id}`).then(() => {
-						this.$emit('update:visible', false)
-						this.$emit('update:groupInfo', {})
-						this.$emit('update-group')
+						this.handleClose()
 						this.$notify({
 							title: 'Успішно',
 							message: 'Група була видалена',
@@ -228,6 +247,29 @@
 						this.$notify.error({
 							title: 'Сталась помилка',
 							message: `Можливо група не була видалена. ${err}`,
+							duration: 0
+						})
+					})
+				})
+			},
+			deleteForceGroup() {
+				this.$confirm('Ви впевнені що бажаєте видалити групу і також всі групи, які від неї залежні?').then(() => {
+					this.$api.delete(`/groups/${this.group.id}`,{
+						params:{
+							IsForceDelete: true
+						}
+					}).then(() => {
+						this.handleClose()
+						this.$notify({
+							title: 'Успішно',
+							message: 'Прупи успішно були видалені',
+							duration: 3000,
+							type: 'success'
+						})
+					}).catch(err => {
+						this.$notify.error({
+							title: 'Сталась помилка',
+							message: `Можливо групи не були видалені. ${err}`,
 							duration: 0
 						})
 					})

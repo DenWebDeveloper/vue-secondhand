@@ -22,7 +22,7 @@ api.interceptors.response.use((response) => {
 }, (err) => {
 	if (err.response && err.response.status === 401) {
 		Cookies.remove('token')
-		router.push({name:'auth'})
+		router.push({name: 'auth'})
 	}
 	return Promise.reject(err)
 })

@@ -3,7 +3,7 @@
         <el-table
                 border
                 v-loading="loading"
-                :data="products"
+                :data="modeLoadedGroup?loadedGroup:products"
                 style="width: 100%">
             <el-table-column align="center" label="#">
                 <template slot-scope="scope">
@@ -25,7 +25,7 @@
                     <span>{{ scope.row.shortDescription}}</span>
                 </template>
             </el-table-column>
-            <el-table-column align="center" label="">
+            <el-table-column align="center" label="" v-if="!modeLoadedGroup">
                 <template slot-scope="scope">
                     <el-button
                             size="mini"
@@ -35,6 +35,7 @@
             </el-table-column>
         </el-table>
         <el-pagination
+                v-if="!modeLoadedGroup"
                 class="mt-10"
                 @size-change="sizeChangePagination"
                 @current-change="currentChangePagination"
@@ -60,6 +61,10 @@
 			},
 			textSearch: {
 				type: String,
+			},
+			loadedGroup: {
+				type: Array,
+				required: false,
 			}
 		},
 		data() {
@@ -77,7 +82,11 @@
 		computed: {
 			startPositionPaginate() {// (2*4) - 4 = 6
 				return (this.pagination.current * this.pagination.size) - this.pagination.size
-			}
+			},
+
+            modeLoadedGroup: function () {
+                return Array.isArray(this.loadedGroup)
+            }
 		},
 		created() {
 			bus.$on('reloadTableProducts', this.getProducts)
@@ -102,6 +111,7 @@
 			 * Products
 			 */
 			getProducts() {
+			    if(this.modeLoadedGroup) return
 				let params = {
 					isVisible: this.activeProducts,
 				}
@@ -140,8 +150,8 @@
 					this.loading = false
 				})
 			},
-			editProduct(index,row) {
-				bus.$emit('editProduct',row)
+			editProduct(index, row) {
+				bus.$emit('editProduct', row)
 			},
 			/**
 			 * Pagination
