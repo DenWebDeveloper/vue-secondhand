@@ -3,7 +3,7 @@ import axios from 'axios'
 import router from '../router'
 
 const api = axios.create({
-	baseURL: 'http://acgproduct-001-site1.gtempurl.com/api',
+	baseURL: 'http://acgproduct2-001-site1.gtempurl.com/api',
 	timeout: 5000,
 })
 

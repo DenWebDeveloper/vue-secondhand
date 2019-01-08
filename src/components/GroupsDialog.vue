@@ -2,6 +2,7 @@
     <el-dialog
             :title="`${isCreate?'Створити':'Оновити'} групу`"
             :visible="visible"
+            :close-on-click-modal="false"
             :before-close="handleClose"
             @open="handleOpen"
             width="90%">
@@ -61,13 +62,13 @@
                                 accept="image/*"
                                 ref="upload"
                                 drag
-                                :action="`http://acgproduct-001-site1.gtempurl.com/api/groups/image/${group.id}`">
+                                :action="`http://acgproduct2-001-site1.gtempurl.com/api/groups/image/${group.id}`">
                             <div slot="tip" class="el-upload__tip">Limit:1 photo</div>
                             <i class="el-icon-plus group-uploader-icon"></i>
                         </el-upload>
                         <img v-if="imgId"
                              class="group-img-preview"
-                             :src="`http://acgproduct-001-site1.gtempurl.com/api/groups/${group.id}/images/${imgId}/content`"
+                             :src="`http://acgproduct2-001-site1.gtempurl.com/api/groups/${group.id}/images/${imgId}/content`"
                              alt="Preview">
                     </el-form-item>
                 </el-col>

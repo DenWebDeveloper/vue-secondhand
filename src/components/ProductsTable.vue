@@ -5,9 +5,14 @@
                 v-loading="loading"
                 :data="modeLoadedGroup?loadedGroup:products"
                 style="width: 100%">
-            <el-table-column align="center" label="#">
+            <el-table-column align="center" label="Фото">
                 <template slot-scope="scope">
-                    <span>{{ scope.row.id }}</span>
+                    <img :src="`http://acgproduct2-001-site1.gtempurl.com/api/products/${scope.row.id}/images/${scope.row.imageId}/content`" width="100%" alt="Photo product">
+                </template>
+            </el-table-column>
+            <el-table-column align="center" label="Код продукту">
+                <template slot-scope="scope">
+                    <span>{{ getFullCode(scope.row.productCode) }}</span>
                 </template>
             </el-table-column>
             <el-table-column align="center" label="Ім'я">
@@ -84,9 +89,9 @@
 				return (this.pagination.current * this.pagination.size) - this.pagination.size
 			},
 
-            modeLoadedGroup: function () {
-                return Array.isArray(this.loadedGroup)
-            }
+			modeLoadedGroup: function () {
+				return Array.isArray(this.loadedGroup)
+			}
 		},
 		created() {
 			bus.$on('reloadTableProducts', this.getProducts)
@@ -106,12 +111,15 @@
 					vm.textSearch
 			], this.debouncedGetProducts)
 		},
+		beforeDestroy() {
+			bus.$off('reloadTableProducts', this.getProducts)
+		},
 		methods: {
 			/**
 			 * Products
 			 */
 			getProducts() {
-			    if(this.modeLoadedGroup) return
+				if (this.modeLoadedGroup) return
 				let params = {
 					isVisible: this.activeProducts,
 				}
@@ -162,6 +170,14 @@
 			currentChangePagination(val) {
 				this.$set(this.pagination, 'current', val)
 			},
+            getFullCode(code) {
+                const length = String(code).length
+                let  zeros = ''
+                for (let i = 0; i < 9 - length; i++) {
+                    zeros += '0'
+                }
+                return zeros + String(code)
+            }
 		}
 	}
 </script>

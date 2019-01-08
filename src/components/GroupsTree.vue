@@ -30,6 +30,9 @@
 		created() {
 			bus.$on('updateGroups', this.getGroups)
 		},
+		beforeDestroy() {
+			bus.$off('updateGroups', this.getGroups)
+		},
 		methods: {
 			getGroups() {
 				this.$api.get('/groups', {

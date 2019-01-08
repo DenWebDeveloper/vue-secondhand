@@ -48,6 +48,9 @@
 		created() {
 			bus.$on('editGroup', this.editGroup)
 		},
+		beforeDestroy() {
+			bus.$off('editGroup', this.editGroup)
+		},
 		methods: {
 			createGroup() {
 				this.dialog = {

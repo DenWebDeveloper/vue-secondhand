@@ -3,8 +3,10 @@
         <el-dialog
                 :title="`${productDialog.create?'Створити':'Оновити'} продукт`"
                 :visible.sync="productDialog.visible"
+                :close-on-click-modal="false"
                 @close="resetDialogs"
                 @open="checkLoadGroups"
+                append-to-body
                 width="90%">
             <el-form :model="product" ref="productForm" label-width="150px" label-position="top">
                 <el-row type="flex" justify="space-between">
@@ -12,16 +14,16 @@
                         <el-form-item
                                 :rules="requiredInputRule"
                                 label="Ім'я" prop="name">
-                            <el-input v-model.trim="product.name"/>
+                            <el-input v-model.trim="product.name" :disabled="readOnly"/>
                         </el-form-item>
                         <el-form-item prop="type">
-                            <el-checkbox v-model="product.isVisible">Показати товар на сайті</el-checkbox>
+                            <el-checkbox :disabled="readOnly" v-model="product.isVisible">Показати товар на сайті</el-checkbox>
                         </el-form-item>
                         <el-form-item
                                 prop="groupId"
                                 label="Назва групи"
                                 :rules="[{ required: true, message: 'Виберіть групу', trigger: ['blur','change']}]">
-                            <el-select v-model="product.groupId"
+                            <el-select v-model="product.groupId" :disabled="readOnly"
                                        filterable clearable placeholder="Виберіть групу">
                                 <el-option
                                         v-for="item in allGroups"
@@ -34,33 +36,34 @@
                         <el-form-item
                                 :rules="requiredInputRule"
                                 label="Ціна" prop="price">
-                            <el-input v-model.trim="product.price"/>
+                            <el-input v-model.trim="product.price" :disabled="readOnly" type="number"/>
                         </el-form-item>
                         <el-form-item
                                 :rules="requiredInputRule"
                                 label="Короткий опис" prop="shortDescription">
-                            <el-input v-model.trim="product.shortDescription"/>
+                            <el-input v-model.trim="product.shortDescription" :disabled="readOnly"/>
                         </el-form-item>
                         <el-form-item
                                 :rules="requiredInputRule"
                                 label="Опис" prop="description">
-                            <el-input type="textarea" v-model.trim="product.description"/>
+                            <el-input type="textarea" :disabled="readOnly" v-model.trim="product.description"/>
                         </el-form-item>
                         <fieldset>
                             <legend>Детальні характеристики</legend>
                             <el-form-item
                                     v-for="(item, index) in product.productValues"
-                                    :label="'Детальна характеристика ' + (index + 1)"
+                                    style="margin-bottom: 4px;"
                                     :key="index">
                                 <div class="detail-params">
-                                    <el-input style="margin: 5px" v-model="item.key"></el-input>
-                                    <el-input style="margin: 5px" v-model="item.value"></el-input>
+                                    <el-input :disabled="readOnly" style="margin: 5px" v-model="item.key"></el-input>
+                                    <el-input :disabled="readOnly" style="margin: 5px" v-model="item.value"></el-input>
                                     <el-button type="danger" style="margin: 5px"
                                                @click.prevent="removeCharacteristic(item)">Видалити
                                     </el-button>
                                 </div>
                             </el-form-item>
-                            <el-button type="success" style="margin-left: auto;display: block;"
+                            <el-button type="success"
+                                       style="margin-left: auto;display: block;margin-right: 3px; min-width: 107px;"
                                        @click.prevent="addCharacteristic">Додати
                             </el-button>
                         </fieldset>
@@ -68,8 +71,9 @@
                     </el-col>
                     <el-col :span="9" :offset="1">
                         <el-upload
+                                :disabled="readOnly"
                                 style="width: 100%"
-                                :action="`http://acgproduct-001-site1.gtempurl.com/api/products/${product.id}/images`"
+                                :action="`http://acgproduct2-001-site1.gtempurl.com/api/products/${product.id}/images`"
                                 :on-remove="handleRemove"
                                 :file-list="productFilesList"
                                 :headers="headers"
@@ -154,8 +158,9 @@
 
 				allGroups: [],
 				productFilesList: [],
+                readOnly: false,
 
-				groupDialog: {
+                groupDialog: {
 					visible: false
 				},
 				productDialog: {
@@ -169,6 +174,10 @@
 		created() {
 			bus.$on('editProduct', this.editProduct)
 			bus.$on('createProduct', this.createProduct)
+		},
+		beforeDestroy() {
+			bus.$off('editProduct', this.editProduct)
+			bus.$off('createProduct', this.createProduct)
 		},
 		methods: {
 			// used
@@ -192,6 +201,7 @@
 
 			resetDialogs() {
 				this.productFilesList = []
+                this.readOnly = false
 				this.groupDialog = {
 					visible: false
 				}
@@ -229,7 +239,7 @@
 			submitProduct() {
 				this.$refs['productForm'].validate(valid => {
 					if (!valid) return false
-                    this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
+					this.$api.put(`/products/${this.product.id}`, this.product).then(() => {
 						bus.$emit('reloadTableProducts')
 						this.$notifySuccess()
 						this.resetDialogs()
@@ -279,7 +289,7 @@
 					this.productFilesList = res.data.map(item => {
 						return {
 							...item, url: `
-                        http://acgproduct-001-site1.gtempurl.com/api/products/${this.product.id}/images/${item.id}/content
+                        http://acgproduct2-001-site1.gtempurl.com/api/products/${this.product.id}/images/${item.id}/content
                         `
 						}
 					})
@@ -303,7 +313,8 @@
 				}
 				this.$set(this.productDialog, 'create', true)
 			},
-			editProduct(product) {
+			editProduct(product,readOnly) {
+				if(readOnly) this.readOnly = true
 				this.productDialog = {
 					visible: true,
 					create: false

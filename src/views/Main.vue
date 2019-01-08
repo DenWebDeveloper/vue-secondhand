@@ -50,8 +50,7 @@
 
 <style scoped>
     .main {
-        padding: 0;
-        padding-left: 10px;
+        padding: 0 0 0 10px;
     }
 
     .global-container {
