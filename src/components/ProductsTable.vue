@@ -7,7 +7,7 @@
                 style="width: 100%">
             <el-table-column align="center" label="Фото">
                 <template slot-scope="scope">
-                    <img :src="`http://acgproduct2-001-site1.gtempurl.com/api/products/${scope.row.id}/images/${scope.row.imageId}/content`" width="100%" alt="Photo product">
+                    <img :src="`/api/products/${scope.row.id}/images/${scope.row.imageId}/content`" width="100%" alt="Photo product">
                 </template>
             </el-table-column>
             <el-table-column align="center" label="Код продукту">
@@ -109,7 +109,7 @@
 					vm.pagination.counts,
 					vm.activeProducts,
 					vm.textSearch
-			], this.debouncedGetProducts)
+				], this.debouncedGetProducts)
 		},
 		beforeDestroy() {
 			bus.$off('reloadTableProducts', this.getProducts)
@@ -170,14 +170,14 @@
 			currentChangePagination(val) {
 				this.$set(this.pagination, 'current', val)
 			},
-            getFullCode(code) {
-                const length = String(code).length
-                let  zeros = ''
-                for (let i = 0; i < 9 - length; i++) {
-                    zeros += '0'
-                }
-                return zeros + String(code)
-            }
+			getFullCode(code) {
+				const length = String(code).length
+				let  zeros = ''
+				for (let i = 0; i < 9 - length; i++) {
+					zeros += '0'
+				}
+				return zeros + String(code)
+			}
 		}
 	}
 </script>

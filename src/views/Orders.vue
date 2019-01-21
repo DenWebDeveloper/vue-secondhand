@@ -127,14 +127,12 @@
 </template>
 
 <script>
-	import Paginate from 'vuejs-paginate'
 	import bus from '../helpers/bus'
 	import OrdersDialog from '../components/OrdersDialog'
 
 	export default {
 		name: 'Home',
 		components: {
-			Paginate,
 			OrdersDialog
 		},
 		data() {
@@ -192,7 +190,7 @@
 			getOrders(searchParams = {}) {
 				const params = {
 					isActive: this.activeSearch,
-                    orderType: this.orderStatus,
+					orderType: this.orderStatus,
 					...searchParams
 				}
 				this.loadingOrderTable = true

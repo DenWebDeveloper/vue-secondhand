@@ -38,14 +38,12 @@
 <script>
 	import bus from '../helpers/bus'
 
-	import Paginate from 'vuejs-paginate'
 	import ProductsDialog from '../components/ProductsDialog'
 	import ProductsTable from '../components/ProductsTable'
 
 	export default {
 		name: 'Home',
 		components: {
-			Paginate,
 			ProductsDialog,
 			ProductsTable
 		},

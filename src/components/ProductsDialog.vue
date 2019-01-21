@@ -73,7 +73,7 @@
                         <el-upload
                                 :disabled="readOnly"
                                 style="width: 100%"
-                                :action="`http://acgproduct2-001-site1.gtempurl.com/api/products/${product.id}/images`"
+                                :action="`/api/products/${product.id}/images`"
                                 :on-remove="handleRemove"
                                 :file-list="productFilesList"
                                 :headers="headers"
@@ -158,9 +158,9 @@
 
 				allGroups: [],
 				productFilesList: [],
-                readOnly: false,
+				readOnly: false,
 
-                groupDialog: {
+				groupDialog: {
 					visible: false
 				},
 				productDialog: {
@@ -201,7 +201,7 @@
 
 			resetDialogs() {
 				this.productFilesList = []
-                this.readOnly = false
+				this.readOnly = false
 				this.groupDialog = {
 					visible: false
 				}
@@ -289,7 +289,7 @@
 					this.productFilesList = res.data.map(item => {
 						return {
 							...item, url: `
-                        http://acgproduct2-001-site1.gtempurl.com/api/products/${this.product.id}/images/${item.id}/content
+                        /api/products/${this.product.id}/images/${item.id}/content
                         `
 						}
 					})

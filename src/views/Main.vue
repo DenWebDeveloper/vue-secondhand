@@ -20,6 +20,10 @@
                         <i class="el-icon-setting"></i>
                         <span>Налаштування</span>
                     </el-menu-item>
+                    <el-menu-item index="/parameters">
+                        <i class="el-icon-edit-outline"></i>
+                        <span>Публічні параметри</span>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
             <el-main class="main">
